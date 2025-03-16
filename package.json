@@ -25,6 +25,7 @@
     "prepack": "publint",
     "format": "prettier --write .",
     "lint": "prettier --check . && eslint .",
+    "check": "tsc --skipLibCheck",
     "test": "vitest run",
     "changeset:version": "changeset version && git add --all",
     "changeset:publish": "changeset publish"
@@ -62,7 +63,8 @@
     "tsconfig-to-dual-package": "^1.2.0",
     "typescript": "^5.8.2",
     "typescript-eslint": "^8.26.1",
-    "vitest": "^3.0.8"
+    "vitest": "^3.0.8",
+    "zod": "^3.24.2"
   },
   "dependencies": {
     "lodash": "^4.17.21"

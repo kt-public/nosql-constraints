@@ -15,7 +15,7 @@ permissions:
   contents: read # to fetch code (actions/checkout)
 
 jobs:
-  lint:
+  check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,6 +25,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run lint
+      - run: npm run check
   test:
     runs-on: ubuntu-latest
     strategy:
