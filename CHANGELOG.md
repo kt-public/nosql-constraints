@@ -1,5 +1,11 @@
 # nosql-constraints
 
+## 0.0.4
+
+### Patch Changes
+
+- 6b49dbd: update to dual build
+
 ## 0.0.3
 
 ### Patch Changes
