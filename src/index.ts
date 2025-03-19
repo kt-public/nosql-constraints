@@ -1,1 +1,2 @@
-export { DiGraph } from './digraph/digraph';
+export { DiGraph, EdgeDefinition, VertexDefinition } from './digraph/index.js';
+
