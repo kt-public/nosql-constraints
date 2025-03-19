@@ -1,6 +1,8 @@
 {
   "compilerOptions": {
-    "lib": ["es2023"],
+    "lib": [
+      "es2023"
+    ],
     "target": "esnext",
     "module": "esnext",
     "moduleResolution": "node",
@@ -12,9 +14,12 @@
     "skipLibCheck": true,
     "sourceMap": true,
     "strict": true,
-    "outDir": "dist",
+    "outDir": "./dist",
     "declaration": true,
     "declarationMap": true
   },
-  "exclude": ["node_modules", "dist"]
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
 }

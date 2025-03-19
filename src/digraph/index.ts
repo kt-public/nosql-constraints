@@ -1,3 +1,4 @@
-export { DiGraph } from './digraph';
-export { EdgeDefinition } from './edge';
-export { VertexDefinition } from './vertex';
+export { DiGraph } from './digraph.js';
+export { EdgeDefinition } from './edge.js';
+export { VertexDefinition } from './vertex.js';
+
