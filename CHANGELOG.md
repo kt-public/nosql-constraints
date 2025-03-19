@@ -1,5 +1,11 @@
 # nosql-constraints
 
+## 0.0.5
+
+### Patch Changes
+
+- ea9f80f: fix issue with import in vite project
+
 ## 0.0.4
 
 ### Patch Changes
