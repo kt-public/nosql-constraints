@@ -30,9 +30,7 @@ export type ReferencingDocumentChunk = {
   // e.g. type: 'portfolio' or type: 'account', countryCode: 'DE', accountType: 'statePension'
   [literal: string]: string;
 } & {
-  // This could be the actual referencing property or a property holding child object/array or array of referencing properties
-  // TODO: How do we handle this?
-  [referencingProperty: ReferencingPropertyName]: undefined | ReferencingDocumentChunk;
+  [referencingProperty: string]: undefined | ReferencingDocumentChunk;
 };
 export interface DocumentSchemaAdapter {
   findReferencingChunks(): ReferencingDocumentChunk;
