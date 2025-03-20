@@ -31,9 +31,13 @@ type DocumentSchemaChunkType =
   | 'boolean'
   | 'null'
   | 'literal';
-export interface DocumentSchemaChunk {
+export type DocumentSchemaChunk = {
   path: string | undefined;
   type: DocumentSchemaChunkType;
   value?: unknown;
   properties?: Record<string, DocumentSchemaChunk[]>;
+}
+
+export interface DocumentSchemaAdapter {
+  extractChunks(): DocumentSchemaChunk[];
 }

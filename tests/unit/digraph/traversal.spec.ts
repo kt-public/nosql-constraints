@@ -1,16 +1,14 @@
-import { describe, expect, test } from 'vitest';
-import { DiGraph, Traversal } from '../../../src/digraph/digraph';
-import type { VertexDefinition, VertexId } from '../../../src/digraph/types';
+import { describe, expect, test } from "vitest";
+import { DiGraph, Traversal, VertexDefinition, VertexId } from "../../../src/digraph";
 
-type Vertex = VertexDefinition<Record<string, unknown>, undefined> & {
-  body: Record<string, unknown>;
-};
+type VertexBody = Record<string, unknown>;
+type Vertex = VertexDefinition<VertexBody> & { body: VertexBody };
 
 function* createRawVertices(...ids: VertexId[]): Generator<Vertex> {
   for (const id of ids) {
     yield {
       id,
-      adjacentTo: {},
+      adjacentTo: [],
       body: {}
     };
   }
@@ -24,16 +22,14 @@ type VertexBuilder = {
 function makeVertex(id: VertexId): VertexBuilder {
   return {
     raw: (adjacentTo = []) => {
-      const adjacentToObj = Object.fromEntries(adjacentTo.map((id) => [id, undefined]));
-      return { id, adjacentTo: adjacentToObj, body: {} };
+      return { id, adjacentTo, body: {} };
     },
     adjacentTo(...adjacentTo: VertexId[]) {
-      const adjacentToObj = Object.fromEntries(adjacentTo.map((id) => [id, undefined]));
       return {
         raw: () => {
           return {
             id,
-            adjacentTo: adjacentToObj,
+            adjacentTo,
             body: {}
           };
         },
@@ -43,39 +39,47 @@ function makeVertex(id: VertexId): VertexBuilder {
   };
 }
 
-describe('Graph traversal', () => {
-  test('Should expose a graph traversal method without root vertex', () => {
-    const graph = new DiGraph<Vertex>();
-    graph.addVertices(...createRawVertices('a', 'b', 'c', 'd', 'e', 'f', 'g'));
+describe("Graph traversal", () => {
+  test("Should expose a graph traversal method without root vertex", () => {
+    const graph = new DiGraph<VertexBody, Vertex>();
+    graph.addVertices(...createRawVertices("a", "b", "c", "d", "e", "f", "g"));
     const vertices = [...graph.traverse()];
 
-    expect(vertices.map(({ id }) => id)).toEqual(['a', 'b', 'c', 'd', 'e', 'f', 'g']);
+    expect(vertices.map(({ id }) => id)).toEqual([
+      "a",
+      "b",
+      "c",
+      "d",
+      "e",
+      "f",
+      "g"
+    ]);
   });
 
-  describe('When providing a root vertex', () => {
-    test('Should return an empty array or element when the provided vertex does not exists', () => {
-      const graph = new DiGraph<Vertex>();
-      const vertexB = makeVertex('b').raw();
-      const vertexC = makeVertex('c').raw();
+  describe("When providing a root vertex", () => {
+    test("Should return an empty array or element when the provided vertex does not exists", () => {
+      const graph = new DiGraph<VertexBody, Vertex>();
+      const vertexB = makeVertex("b").raw();
+      const vertexC = makeVertex("c").raw();
 
       const vertices: Vertex[] = [vertexB, vertexC];
       graph.addVertices(...vertices);
 
-      const it = graph.traverse({ rootVertexId: 'a' });
+      const it = graph.traverse({ rootVertexId: "a" });
       const { value, done } = it.next();
       expect({ value, done }).toEqual({ value: undefined, done: true });
       expect([...it]).toEqual([]);
     });
 
-    test('Should expose a graph DFS traversal method starting from an existing root vertex', () => {
-      const graph = new DiGraph<Vertex>();
-      const vertexA = makeVertex('a').adjacentTo('d', 'c').raw();
-      const vertexB = makeVertex('b').raw();
-      const vertexC = makeVertex('c').raw();
-      const vertexD = makeVertex('d').adjacentTo('b').raw();
+    test("Should expose a graph DFS traversal method starting from an existing root vertex", () => {
+      const graph = new DiGraph<VertexBody, Vertex>();
+      const vertexA = makeVertex("a").adjacentTo("d", "c").raw();
+      const vertexB = makeVertex("b").raw();
+      const vertexC = makeVertex("c").raw();
+      const vertexD = makeVertex("d").adjacentTo("b").raw();
       graph.addVertices(vertexB, vertexA, vertexC, vertexD);
 
-      const it = graph.traverse({ rootVertexId: 'a', traversal: 'dfs' });
+      const it = graph.traverse({ rootVertexId: "a", traversal: "dfs" });
 
       expect(it.next().value?.id).toEqual(vertexA.id);
       expect(it.next().value?.id).toEqual(vertexD.id);
@@ -85,16 +89,16 @@ describe('Graph traversal', () => {
       expect(it.next().done).toBeTruthy();
     });
 
-    test('Should expose a graph BFS traversal method starting from an existing root vertex with multiple children', () => {
-      const graph = new DiGraph<Vertex>();
-      const vertexA = makeVertex('a').adjacentTo('d', 'c').raw();
-      const vertexB = makeVertex('b').raw();
-      const vertexC = makeVertex('c').adjacentTo('e').raw();
-      const vertexD = makeVertex('d').adjacentTo('b').raw();
-      const vertexE = makeVertex('e').raw();
+    test("Should expose a graph BFS traversal method starting from an existing root vertex with multiple children", () => {
+      const graph = new DiGraph<VertexBody, Vertex>();
+      const vertexA = makeVertex("a").adjacentTo("d", "c").raw();
+      const vertexB = makeVertex("b").raw();
+      const vertexC = makeVertex("c").adjacentTo("e").raw();
+      const vertexD = makeVertex("d").adjacentTo("b").raw();
+      const vertexE = makeVertex("e").raw();
       graph.addVertices(vertexB, vertexA, vertexC, vertexD, vertexE);
 
-      const it = graph.traverse({ rootVertexId: 'a', traversal: 'bfs' });
+      const it = graph.traverse({ rootVertexId: "a", traversal: "bfs" });
 
       expect(it.next().value?.id).toEqual(vertexA.id);
       expect(it.next().value?.id).toEqual(vertexD.id);
@@ -105,28 +109,28 @@ describe('Graph traversal', () => {
       expect(it.next().done).toBeTruthy();
     });
 
-    test('Should expose a graph BFS traversal method starting from an existing root vertex with one child', () => {
-      const graph = new DiGraph<Vertex>();
-      const vertexA = makeVertex('a').adjacentTo('b').raw();
-      const vertexB = makeVertex('b').adjacentTo('d', 'c').raw();
-      const vertexC = makeVertex('c').raw();
-      const vertexD = makeVertex('d').adjacentTo('e').raw();
-      const vertexE = makeVertex('e').raw();
+    test("Should expose a graph BFS traversal method starting from an existing root vertex with one child", () => {
+      const graph = new DiGraph<VertexBody, Vertex>();
+      const vertexA = makeVertex("a").adjacentTo("b").raw();
+      const vertexB = makeVertex("b").adjacentTo("d", "c").raw();
+      const vertexC = makeVertex("c").raw();
+      const vertexD = makeVertex("d").adjacentTo("e").raw();
+      const vertexE = makeVertex("e").raw();
 
       graph.addVertices(vertexB, vertexA, vertexC, vertexD, vertexE);
 
-      const it = graph.traverse({ rootVertexId: 'a', traversal: 'bfs' });
-      expect(it.next().value?.id).toEqual('a');
-      expect(it.next().value?.id).toEqual('b');
-      expect(it.next().value?.id).toEqual('d');
-      expect(it.next().value?.id).toEqual('c');
-      expect(it.next().value?.id).toEqual('e');
+      const it = graph.traverse({ rootVertexId: "a", traversal: "bfs" });
+      expect(it.next().value?.id).toEqual("a");
+      expect(it.next().value?.id).toEqual("b");
+      expect(it.next().value?.id).toEqual("d");
+      expect(it.next().value?.id).toEqual("c");
+      expect(it.next().value?.id).toEqual("e");
     });
   });
 
-  describe('When not providing a root vertex', () => {
-    test('Should return an empty array or there are no vertices', () => {
-      const graph = new DiGraph<Vertex>();
+  describe("When not providing a root vertex", () => {
+    test("Should return an empty array or there are no vertices", () => {
+      const graph = new DiGraph<VertexBody, Vertex>();
 
       const it = graph.traverse();
       const { value, done } = it.next();
@@ -134,16 +138,16 @@ describe('Graph traversal', () => {
       expect([...it]).toEqual([]);
     });
 
-    test('DFS traversal', () => {
-      const graph = new DiGraph<Vertex>();
-      const vertexA = makeVertex('a').adjacentTo('b', 'c').raw();
-      const vertexB = makeVertex('b').adjacentTo('d').raw();
-      const vertexC = makeVertex('c').raw();
-      const vertexD = makeVertex('d').raw();
+    test("DFS traversal", () => {
+      const graph = new DiGraph<VertexBody, Vertex>();
+      const vertexA = makeVertex("a").adjacentTo("b", "c").raw();
+      const vertexB = makeVertex("b").adjacentTo("d").raw();
+      const vertexC = makeVertex("c").raw();
+      const vertexD = makeVertex("d").raw();
 
       graph.addVertices(vertexA, vertexB, vertexC, vertexD);
 
-      const it = graph.traverse({ traversal: 'dfs' });
+      const it = graph.traverse({ traversal: "dfs" });
 
       expect(it.next().value?.id).toEqual(vertexA.id);
       expect(it.next().value?.id).toEqual(vertexB.id);
@@ -153,16 +157,16 @@ describe('Graph traversal', () => {
       expect(it.next().done).toBeTruthy();
     });
 
-    test('BFS traversal', () => {
-      const graph = new DiGraph<Vertex>();
-      const vertexA = makeVertex('a').adjacentTo('b', 'c').raw();
-      const vertexB = makeVertex('b').adjacentTo('d').raw();
-      const vertexC = makeVertex('c').raw();
-      const vertexD = makeVertex('d').raw();
+    test("BFS traversal", () => {
+      const graph = new DiGraph<VertexBody, Vertex>();
+      const vertexA = makeVertex("a").adjacentTo("b", "c").raw();
+      const vertexB = makeVertex("b").adjacentTo("d").raw();
+      const vertexC = makeVertex("c").raw();
+      const vertexD = makeVertex("d").raw();
 
       graph.addVertices(vertexA, vertexB, vertexC, vertexD);
 
-      const it = graph.traverse({ traversal: 'bfs' });
+      const it = graph.traverse({ traversal: "bfs" });
 
       expect(it.next().value?.id).toEqual(vertexA.id);
       expect(it.next().value?.id).toEqual(vertexB.id);
@@ -173,16 +177,16 @@ describe('Graph traversal', () => {
     });
   });
 
-  describe('When multiple vertices are connected to the same vertex', () => {
-    test('DFS: Should traverse the same vertex only once', async () => {
-      const graph = new DiGraph<Vertex>();
-      const vertexA = makeVertex('a').adjacentTo('b').raw();
-      const vertexB = makeVertex('b').adjacentTo('c').raw();
-      const vertexC = makeVertex('c').raw();
+  describe("When multiple vertices are connected to the same vertex", () => {
+    test("DFS: Should traverse the same vertex only once", async () => {
+      const graph = new DiGraph<VertexBody, Vertex>();
+      const vertexA = makeVertex("a").adjacentTo("b").raw();
+      const vertexB = makeVertex("b").adjacentTo("c").raw();
+      const vertexC = makeVertex("c").raw();
 
       graph.addVertices(vertexB, vertexA, vertexC);
 
-      const it = graph.traverse({ traversal: 'dfs' });
+      const it = graph.traverse({ traversal: "dfs" });
 
       expect(it.next().value?.id).toEqual(vertexB.id);
       expect(it.next().value?.id).toEqual(vertexC.id);
@@ -191,15 +195,15 @@ describe('Graph traversal', () => {
       expect(it.next().done).toBeTruthy();
     });
 
-    test('DFS with root: Should traverse the same vertex only once', async () => {
-      const graph = new DiGraph<Vertex>();
-      const vertexA = makeVertex('a').adjacentTo('b', 'c').raw();
-      const vertexB = makeVertex('b').adjacentTo('c').raw();
-      const vertexC = makeVertex('c').raw();
+    test("DFS with root: Should traverse the same vertex only once", async () => {
+      const graph = new DiGraph<VertexBody, Vertex>();
+      const vertexA = makeVertex("a").adjacentTo("b", "c").raw();
+      const vertexB = makeVertex("b").adjacentTo("c").raw();
+      const vertexC = makeVertex("c").raw();
 
       graph.addVertices(vertexB, vertexA, vertexC);
 
-      const it = graph.traverse({ rootVertexId: 'a', traversal: 'dfs' });
+      const it = graph.traverse({ rootVertexId: "a", traversal: "dfs" });
 
       expect(it.next().value?.id).toEqual(vertexA.id);
       expect(it.next().value?.id).toEqual(vertexB.id);
@@ -208,15 +212,15 @@ describe('Graph traversal', () => {
       expect(it.next().done).toBeTruthy();
     });
 
-    test('BFS: Should traverse the same vertex only once', async () => {
-      const graph = new DiGraph<Vertex>();
-      const vertexA = makeVertex('a').adjacentTo('b', 'c').raw();
-      const vertexB = makeVertex('b').adjacentTo('c').raw();
-      const vertexC = makeVertex('c').raw();
+    test("BFS: Should traverse the same vertex only once", async () => {
+      const graph = new DiGraph<VertexBody, Vertex>();
+      const vertexA = makeVertex("a").adjacentTo("b", "c").raw();
+      const vertexB = makeVertex("b").adjacentTo("c").raw();
+      const vertexC = makeVertex("c").raw();
 
       graph.addVertices(vertexB, vertexA, vertexC);
 
-      const it = graph.traverse({ traversal: 'bfs' });
+      const it = graph.traverse({ traversal: "bfs" });
 
       expect(it.next().value?.id).toEqual(vertexB.id);
       expect(it.next().value?.id).toEqual(vertexC.id);
@@ -225,16 +229,16 @@ describe('Graph traversal', () => {
       expect(it.next().done).toBeTruthy();
     });
 
-    test('BFS with root: Should traverse the same vertex only once', async () => {
-      const graph = new DiGraph<Vertex>();
-      const vertexA = makeVertex('a').adjacentTo('b', 'c').raw();
-      const vertexB = makeVertex('b').adjacentTo('c').raw();
-      const vertexC = makeVertex('c').adjacentTo('d').raw();
-      const vertexD = makeVertex('d').raw();
+    test("BFS with root: Should traverse the same vertex only once", async () => {
+      const graph = new DiGraph<VertexBody, Vertex>();
+      const vertexA = makeVertex("a").adjacentTo("b", "c").raw();
+      const vertexB = makeVertex("b").adjacentTo("c").raw();
+      const vertexC = makeVertex("c").adjacentTo("d").raw();
+      const vertexD = makeVertex("d").raw();
 
       graph.addVertices(vertexB, vertexA, vertexC, vertexD);
 
-      const it = graph.traverse({ rootVertexId: 'a', traversal: 'bfs' });
+      const it = graph.traverse({ rootVertexId: "a", traversal: "bfs" });
 
       expect(it.next().value?.id).toEqual(vertexA.id);
       expect(it.next().value?.id).toEqual(vertexB.id);
@@ -245,29 +249,32 @@ describe('Graph traversal', () => {
     });
   });
 
-  describe('When the graph is cyclic', () => {
-    const traversals = ['dfs', 'bfs'];
+  describe("When the graph is cyclic", () => {
+    const traversals = ["dfs", "bfs"];
 
-    test.each(traversals)('%s: Should traverse all vertices in the graph', (traversal) => {
-      const graph = new DiGraph<Vertex>();
-      const vertexA = makeVertex('a').adjacentTo('b', 'c').raw();
-      const vertexB = makeVertex('b').adjacentTo('a').raw();
-      const vertexC = makeVertex('c').adjacentTo('d').raw();
-      const vertexD = makeVertex('d').raw();
+    test.each(traversals)(
+      "%s: Should traverse all vertices in the graph",
+      (traversal) => {
+        const graph = new DiGraph<VertexBody, Vertex>();
+        const vertexA = makeVertex("a").adjacentTo("b", "c").raw();
+        const vertexB = makeVertex("b").adjacentTo("a").raw();
+        const vertexC = makeVertex("c").adjacentTo("d").raw();
+        const vertexD = makeVertex("d").raw();
 
-      graph.addVertices(vertexB, vertexA, vertexC, vertexD);
+        graph.addVertices(vertexB, vertexA, vertexC, vertexD);
 
-      const it = graph.traverse({
-        rootVertexId: 'b',
-        traversal: traversal as Traversal
-      });
+        const it = graph.traverse({
+          rootVertexId: "b",
+          traversal: traversal as Traversal
+        });
 
-      expect(it.next().value?.id).toEqual(vertexB.id);
-      expect(it.next().value?.id).toEqual(vertexA.id);
-      expect(it.next().value?.id).toEqual(vertexC.id);
-      expect(it.next().value?.id).toEqual(vertexD.id);
+        expect(it.next().value?.id).toEqual(vertexB.id);
+        expect(it.next().value?.id).toEqual(vertexA.id);
+        expect(it.next().value?.id).toEqual(vertexC.id);
+        expect(it.next().value?.id).toEqual(vertexD.id);
 
-      expect(it.next().done).toBeTruthy();
-    });
+        expect(it.next().done).toBeTruthy();
+      }
+    );
   });
 });
