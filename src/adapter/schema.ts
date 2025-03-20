@@ -36,7 +36,7 @@ export type DocumentSchemaChunk = {
   type: DocumentSchemaChunkType;
   value?: unknown;
   properties?: Record<string, DocumentSchemaChunk[]>;
-}
+};
 
 export interface DocumentSchemaAdapter {
   extractChunks(): DocumentSchemaChunk[];
