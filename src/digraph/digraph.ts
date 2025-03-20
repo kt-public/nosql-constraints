@@ -1,26 +1,22 @@
 import _ from 'lodash';
-import { VertexBody, VertexDefinition, VertexId } from './vertex';
+import { EdgeBody, EdgeDefinition, EdgeId, VertexBody, VertexDefinition, VertexId } from './types';
 
 export type Traversal = 'bfs' | 'dfs';
 
-export class DiGraph<Vertex extends VertexDefinition<VertexBody>> {
+export class DiGraph<Vertex extends VertexDefinition<VertexBody, EdgeBody> = VertexDefinition<Record<string, unknown>, Record<string, unknown>>> {
   #vertices: Map<VertexId, Vertex>;
 
   constructor() {
     this.#vertices = new Map();
   }
 
-  static fromRaw(
-    raw: Record<VertexId, VertexDefinition<VertexBody>>
-  ): DiGraph<VertexDefinition<VertexBody>> {
-    const digraph = new DiGraph();
+  static fromRaw<Vertex extends VertexDefinition<VertexBody, EdgeBody> = VertexDefinition<Record<string, unknown>, Record<string, unknown>>>(
+    raw: Record<VertexId, Vertex>
+  ): DiGraph<Vertex> {
+    const digraph = new DiGraph<Vertex>();
 
     for (const vertex of Object.values(raw)) {
-      digraph.addVertex({
-        id: vertex.id,
-        adjacentTo: vertex.adjacentTo,
-        body: vertex.body
-      });
+      digraph.addVertex(vertex);
     }
 
     return digraph;
@@ -66,19 +62,17 @@ export class DiGraph<Vertex extends VertexDefinition<VertexBody>> {
     }
   }
 
-  public addEdge({ from, to }: { from: VertexId; to: VertexId }): void {
-    if (from === to) {
-      return;
+  public addEdge(edge: EdgeDefinition<Vertex['adjacentTo'][string]>): void {
+    if (edge.from === edge.to) {
+      throw new Error('Cannot create a self-referencing edge');
     }
-
-    const [fromVertex, toVertex] = [this.#vertices.get(from), this.#vertices.get(to)];
-
+    const [fromVertex, toVertex] = [this.#vertices.get(edge.from), this.#vertices.get(edge.to)];
     if (fromVertex && toVertex) {
-      const hasNotSameAdjacentVertex = !fromVertex.adjacentTo.find(
-        (adjacentVertex) => adjacentVertex === toVertex.id
-      );
+      const hasNotSameAdjacentVertex = fromVertex.adjacentTo[edge.to] === undefined;
       if (hasNotSameAdjacentVertex) {
-        fromVertex.adjacentTo = fromVertex.adjacentTo.concat(toVertex.id);
+        fromVertex.adjacentTo[edge.to] = edge.body;
+      } else {
+        throw new Error('Cannot create an edge that already exists');
       }
     }
   }
@@ -87,9 +81,9 @@ export class DiGraph<Vertex extends VertexDefinition<VertexBody>> {
     const fromVertex = this.#vertices.get(from);
 
     if (fromVertex) {
-      fromVertex.adjacentTo = fromVertex.adjacentTo.filter(
-        (adjacentVertexId) => adjacentVertexId !== to
-      );
+      delete fromVertex.adjacentTo[to];
+    } else {
+      throw new Error('Cannot delete an edge from a non-existing vertex');
     }
   }
 
@@ -109,6 +103,22 @@ export class DiGraph<Vertex extends VertexDefinition<VertexBody>> {
 
     if (rootVertexToMutate) {
       rootVertexToMutate.body = body;
+    }
+  }
+
+  public updateEdgeBody(edge: EdgeId, body: Vertex['adjacentTo'][string]): void {
+    const fromVertex = this.#vertices.get(edge.from);
+    if (!fromVertex) {
+      throw new Error('Cannot update an edge from a non-existing vertex');
+    }
+    const toVertex = this.#vertices.get(edge.to);
+    if (!toVertex) {
+      throw new Error('Cannot update an edge to a non-existing vertex');
+    }
+    if (fromVertex.adjacentTo[edge.to]) {
+      fromVertex.adjacentTo[edge.to] = body;
+    } else {
+      throw new Error('Cannot update a non-existing edge');
     }
   }
 
@@ -173,9 +183,10 @@ export class DiGraph<Vertex extends VertexDefinition<VertexBody>> {
    * assert.deepEqual(graph.getChildren("A"), [VertexB]) // ok
    */
   public getChildren(rootVertexId: VertexId): Vertex[] {
-    return [...this.#vertices.values()].filter((vertex) =>
-      this.#vertices.get(rootVertexId)?.adjacentTo.includes(vertex.id)
-    );
+    return [...this.#vertices.keys()]
+      .filter((vertexId) => vertexId in (this.#vertices.get(rootVertexId)?.adjacentTo ?? {}))
+      .map((vertexId) => this.#vertices.get(vertexId))
+      .filter((vertex) => vertex !== undefined);
   }
 
   /**
@@ -192,7 +203,7 @@ export class DiGraph<Vertex extends VertexDefinition<VertexBody>> {
 
     const visitedVertices: VertexId[] = [];
 
-    for (const adjacentVertexId of rootVertex.adjacentTo) {
+    for (const adjacentVertexId of Object.keys(rootVertex.adjacentTo)) {
       const adjacentVertex = this.#vertices.get(adjacentVertexId);
 
       if (!adjacentVertex) {
@@ -217,9 +228,8 @@ export class DiGraph<Vertex extends VertexDefinition<VertexBody>> {
    * assert.deepEqual(graph.getParents("B"), [VertexA]) // ok
    */
   public getParents(rootVertexId: VertexId): Vertex[] {
-    return [...this.#vertices.values()].filter((vertex) =>
-      vertex.adjacentTo.includes(rootVertexId)
-    );
+    return [...this.#vertices.values()]
+      .filter((vertex) => rootVertexId in (vertex.adjacentTo));
   }
 
   /**
@@ -342,7 +352,7 @@ export class DiGraph<Vertex extends VertexDefinition<VertexBody>> {
 
   private *collectRootAdjacencyLists(): Generator<[Vertex, Vertex]> {
     for (const rootVertex of this.#vertices.values()) {
-      for (const rootAdjacentVertexId of rootVertex.adjacentTo) {
+      for (const rootAdjacentVertexId of Object.keys(rootVertex.adjacentTo)) {
         const rootAdjacentVertex = this.#vertices.get(rootAdjacentVertexId);
         if (!rootAdjacentVertex) {
           continue;
@@ -378,7 +388,7 @@ export class DiGraph<Vertex extends VertexDefinition<VertexBody>> {
 
     const nextDependencies =
       dependencyTraversal === 'top-to-bottom'
-        ? traversedVertex.adjacentTo
+        ? Object.keys(traversedVertex.adjacentTo)
         : this.getParents(traversedVertex.id).map(({ id }) => id);
 
     for (const adjacentVertexId of nextDependencies) {
@@ -424,7 +434,7 @@ export class DiGraph<Vertex extends VertexDefinition<VertexBody>> {
       const currentNode = verticesInCyclicPath[i - 1];
       // The node just before the current one who is eventually its parent
       const nodeBeforeInPath = this.#vertices.get(verticesInCyclicPath[i - 2]);
-      const isCurrentNodeParent = nodeBeforeInPath?.adjacentTo.includes(currentNode);
+      const isCurrentNodeParent = currentNode in (nodeBeforeInPath?.adjacentTo ?? {});
       /**
        * there is no path existing from the node just before to the current node,
        * meaning that the cycle path can't be coming from that path.
@@ -467,7 +477,7 @@ export class DiGraph<Vertex extends VertexDefinition<VertexBody>> {
     yield rootVertex;
     traversedVertices.add(rootVertexId);
 
-    for (const vertexId of rootVertex.adjacentTo) {
+    for (const vertexId of Object.keys(rootVertex.adjacentTo)) {
       yield* this.depthFirstTraversalFrom(vertexId, traversedVertices);
     }
   }
@@ -486,7 +496,7 @@ export class DiGraph<Vertex extends VertexDefinition<VertexBody>> {
     }
 
     const nextVerticesToVisit: Vertex[] = [];
-    for (const vertexId of vertex.adjacentTo) {
+    for (const vertexId of Object.keys(vertex.adjacentTo)) {
       const adjacentVertex = this.#vertices.get(vertexId);
 
       if (!adjacentVertex || visitedVerticesIds.has(adjacentVertex.id)) continue;
