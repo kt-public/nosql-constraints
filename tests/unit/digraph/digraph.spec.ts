@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { DiGraph } from '../../../src/digraph/digraph';
 import { VertexDefinition, VertexId } from '../../../src/digraph/types';
 
-type Vertex = VertexDefinition<Record<string, unknown>, undefined> & { body: Record<string, unknown> };
+type Vertex = VertexDefinition<Record<string, unknown>, undefined> & {
+  body: Record<string, unknown>;
+};
 function* createRawVertices(...ids: VertexId[]): Generator<Vertex> {
   for (const id of ids) {
     yield {
@@ -265,9 +267,11 @@ describe('Directed Graph Implementation', () => {
         const digraph = new DiGraph<Vertex>();
         const vertexA: Vertex = { id: 'a', adjacentTo: {}, body: {} };
 
-        digraph.addVertices(vertexA);;
+        digraph.addVertices(vertexA);
 
-        expect(() => digraph.addEdge({ from: vertexA.id, to: vertexA.id })).to.throw('Cannot create a self-referencing edge');
+        expect(() => digraph.addEdge({ from: vertexA.id, to: vertexA.id })).to.throw(
+          'Cannot create a self-referencing edge'
+        );
       });
     });
   });

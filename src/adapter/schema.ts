@@ -23,7 +23,14 @@
  * },
  */
 
-type DocumentSchemaChunkType = 'object' | 'array' | 'string' | 'number' | 'boolean' | 'null' | 'literal';
+type DocumentSchemaChunkType =
+  | 'object'
+  | 'array'
+  | 'string'
+  | 'number'
+  | 'boolean'
+  | 'null'
+  | 'literal';
 export interface DocumentSchemaChunk {
   path: string | undefined;
   type: DocumentSchemaChunkType;
