@@ -1,15 +1,15 @@
 import { describe, expect, test } from 'vitest';
 
 import { DiGraph, Traversal } from '../../../src/digraph/digraph';
-import type { VertexBody, VertexDefinition, VertexId } from '../../../src/digraph/vertex';
+import type { VertexDefinition, VertexId } from '../../../src/digraph/types';
 
-type Vertex = VertexDefinition<Record<string, unknown>>;
+type Vertex = VertexDefinition<Record<string, unknown>, undefined> & { body: Record<string, unknown> };
 
 function* createRawVertices(...ids: VertexId[]): Generator<Vertex> {
   for (const id of ids) {
     yield {
       id,
-      adjacentTo: [],
+      adjacentTo: {},
       body: {}
     };
   }
@@ -23,14 +23,16 @@ type VertexBuilder = {
 function makeVertex(id: VertexId): VertexBuilder {
   return {
     raw: (adjacentTo = []) => {
-      return { id, adjacentTo, body: {} };
+      const adjacentToObj = Object.fromEntries(adjacentTo.map((id) => [id, undefined]));
+      return { id, adjacentTo: adjacentToObj, body: {} };
     },
     adjacentTo(...adjacentTo: VertexId[]) {
+      const adjacentToObj = Object.fromEntries(adjacentTo.map((id) => [id, undefined]));
       return {
         raw: () => {
           return {
             id,
-            adjacentTo,
+            adjacentTo: adjacentToObj,
             body: {}
           };
         },
@@ -42,7 +44,7 @@ function makeVertex(id: VertexId): VertexBuilder {
 
 describe('Graph traversal', () => {
   test('Should expose a graph traversal method without root vertex', () => {
-    const graph = new DiGraph();
+    const graph = new DiGraph<Vertex>();
     graph.addVertices(...createRawVertices('a', 'b', 'c', 'd', 'e', 'f', 'g'));
     const vertices = [...graph.traverse()];
 
@@ -51,11 +53,11 @@ describe('Graph traversal', () => {
 
   describe('When providing a root vertex', () => {
     test('Should return an empty array or element when the provided vertex does not exists', () => {
-      const graph = new DiGraph();
+      const graph = new DiGraph<Vertex>();
       const vertexB = makeVertex('b').raw();
       const vertexC = makeVertex('c').raw();
 
-      const vertices: VertexDefinition<VertexBody>[] = [vertexB, vertexC];
+      const vertices: Vertex[] = [vertexB, vertexC];
       graph.addVertices(...vertices);
 
       const it = graph.traverse({ rootVertexId: 'a' });
@@ -65,7 +67,7 @@ describe('Graph traversal', () => {
     });
 
     test('Should expose a graph DFS traversal method starting from an existing root vertex', () => {
-      const graph = new DiGraph();
+      const graph = new DiGraph<Vertex>();
       const vertexA = makeVertex('a').adjacentTo('d', 'c').raw();
       const vertexB = makeVertex('b').raw();
       const vertexC = makeVertex('c').raw();
@@ -83,7 +85,7 @@ describe('Graph traversal', () => {
     });
 
     test('Should expose a graph BFS traversal method starting from an existing root vertex with multiple children', () => {
-      const graph = new DiGraph();
+      const graph = new DiGraph<Vertex>();
       const vertexA = makeVertex('a').adjacentTo('d', 'c').raw();
       const vertexB = makeVertex('b').raw();
       const vertexC = makeVertex('c').adjacentTo('e').raw();
@@ -103,7 +105,7 @@ describe('Graph traversal', () => {
     });
 
     test('Should expose a graph BFS traversal method starting from an existing root vertex with one child', () => {
-      const graph = new DiGraph();
+      const graph = new DiGraph<Vertex>();
       const vertexA = makeVertex('a').adjacentTo('b').raw();
       const vertexB = makeVertex('b').adjacentTo('d', 'c').raw();
       const vertexC = makeVertex('c').raw();
@@ -123,7 +125,7 @@ describe('Graph traversal', () => {
 
   describe('When not providing a root vertex', () => {
     test('Should return an empty array or there are no vertices', () => {
-      const graph = new DiGraph();
+      const graph = new DiGraph<Vertex>();
 
       const it = graph.traverse();
       const { value, done } = it.next();
@@ -132,7 +134,7 @@ describe('Graph traversal', () => {
     });
 
     test('DFS traversal', () => {
-      const graph = new DiGraph();
+      const graph = new DiGraph<Vertex>();
       const vertexA = makeVertex('a').adjacentTo('b', 'c').raw();
       const vertexB = makeVertex('b').adjacentTo('d').raw();
       const vertexC = makeVertex('c').raw();
@@ -151,7 +153,7 @@ describe('Graph traversal', () => {
     });
 
     test('BFS traversal', () => {
-      const graph = new DiGraph();
+      const graph = new DiGraph<Vertex>();
       const vertexA = makeVertex('a').adjacentTo('b', 'c').raw();
       const vertexB = makeVertex('b').adjacentTo('d').raw();
       const vertexC = makeVertex('c').raw();
@@ -172,7 +174,7 @@ describe('Graph traversal', () => {
 
   describe('When multiple vertices are connected to the same vertex', () => {
     test('DFS: Should traverse the same vertex only once', async () => {
-      const graph = new DiGraph();
+      const graph = new DiGraph<Vertex>();
       const vertexA = makeVertex('a').adjacentTo('b').raw();
       const vertexB = makeVertex('b').adjacentTo('c').raw();
       const vertexC = makeVertex('c').raw();
@@ -189,7 +191,7 @@ describe('Graph traversal', () => {
     });
 
     test('DFS with root: Should traverse the same vertex only once', async () => {
-      const graph = new DiGraph();
+      const graph = new DiGraph<Vertex>();
       const vertexA = makeVertex('a').adjacentTo('b', 'c').raw();
       const vertexB = makeVertex('b').adjacentTo('c').raw();
       const vertexC = makeVertex('c').raw();
@@ -206,7 +208,7 @@ describe('Graph traversal', () => {
     });
 
     test('BFS: Should traverse the same vertex only once', async () => {
-      const graph = new DiGraph();
+      const graph = new DiGraph<Vertex>();
       const vertexA = makeVertex('a').adjacentTo('b', 'c').raw();
       const vertexB = makeVertex('b').adjacentTo('c').raw();
       const vertexC = makeVertex('c').raw();
@@ -223,7 +225,7 @@ describe('Graph traversal', () => {
     });
 
     test('BFS with root: Should traverse the same vertex only once', async () => {
-      const graph = new DiGraph();
+      const graph = new DiGraph<Vertex>();
       const vertexA = makeVertex('a').adjacentTo('b', 'c').raw();
       const vertexB = makeVertex('b').adjacentTo('c').raw();
       const vertexC = makeVertex('c').adjacentTo('d').raw();
@@ -246,7 +248,7 @@ describe('Graph traversal', () => {
     const traversals = ['dfs', 'bfs'];
 
     test.each(traversals)('%s: Should traverse all vertices in the graph', (traversal) => {
-      const graph = new DiGraph();
+      const graph = new DiGraph<Vertex>();
       const vertexA = makeVertex('a').adjacentTo('b', 'c').raw();
       const vertexB = makeVertex('b').adjacentTo('a').raw();
       const vertexC = makeVertex('c').adjacentTo('d').raw();
