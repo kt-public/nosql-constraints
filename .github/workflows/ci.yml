@@ -45,6 +45,9 @@ jobs:
       - run: npm ci
       - run: npm test
   run-release:
+    permissions:
+      contents: write
+      pull-requests: write
     needs: [check, test]
     # only run on master branch on push
     if: github.ref == 'refs/heads/master' && github.event_name == 'push'
