@@ -1,5 +1,11 @@
 # nosql-constraints
 
+## 0.0.6
+
+### Patch Changes
+
+- 9bec4dd: dependabot(deps-dev): bump typescript-eslint from 8.26.1 to 8.27.0
+
 ## 0.0.5
 
 ### Patch Changes
