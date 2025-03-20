@@ -15,6 +15,11 @@ permissions:
   contents: read # to fetch code (actions/checkout)
 
 jobs:
+  echo:
+    runs-on: ubuntu-latest
+    steps:
+      - run: ${{ tojson(github) }}
+        shell: cat {0}
   check:
     runs-on: ubuntu-latest
     steps:
