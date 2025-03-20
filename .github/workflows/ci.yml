@@ -44,3 +44,10 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
+  dispatch-release:
+    needs: [check, test]
+    # only run on master branch on push
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - run: gh workflow run release
