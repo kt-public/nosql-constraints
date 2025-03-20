@@ -51,3 +51,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: gh workflow run release
+        env:
+          GH_TOKEN: ${{ github.token }}
