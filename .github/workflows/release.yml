@@ -13,7 +13,8 @@ jobs:
   echo:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "${{ toJson(github) }}"
+      - run: ${{ tojson(github) }}
+        shell: cat {0}
   release:
     # prevents this action from running on forks
     if: ${{ github.repository == 'ktarmyshov/nosql-constraints' && github.ref == 'refs/heads/master' && github.event.workflow_run.event == 'push' && github.event.workflow_run.conclusion == 'success' }}
