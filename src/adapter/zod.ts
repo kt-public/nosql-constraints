@@ -1,8 +1,18 @@
 import { ZodLiteral, ZodNumber, ZodObject, ZodRawShape, ZodSchema, ZodString, ZodUnion } from 'zod';
-import { DocumentSchemaChunk } from './schema';
+import { DocumentSchemaAdapter, DocumentSchemaChunk } from './schema';
 
-export function zod(schema: ZodSchema): DocumentSchemaChunk[] {
-  return extractChunks(schema, undefined);
+export function zod(schema: ZodSchema): DocumentSchemaAdapter {
+  return new ZodAdapter(schema);
+}
+
+class ZodAdapter implements DocumentSchemaAdapter {
+  #schema: ZodSchema;
+  constructor(schema: ZodSchema) {
+    this.#schema = schema;
+  }
+  extractChunks(): DocumentSchemaChunk[] {
+    return extractChunks(this.#schema, undefined);
+  }
 }
 
 function extractChunks(schema: ZodSchema, parentPath: string | undefined): DocumentSchemaChunk[] {

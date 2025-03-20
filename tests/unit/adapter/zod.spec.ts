@@ -9,7 +9,8 @@ describe('Zod Adapter implementation', () => {
         name: z.string(),
         age: z.number()
       });
-      const chunks = zod(schema);
+      const adapter = zod(schema);
+      const chunks = adapter.extractChunks();
       expect(chunks).toEqual([
         {
           path: undefined,
@@ -28,7 +29,8 @@ describe('Zod Adapter implementation', () => {
           age: z.number()
         })
       });
-      const chunks = zod(schema);
+      const adapter = zod(schema);
+      const chunks = adapter.extractChunks();
       expect(chunks).toEqual([
         {
           type: 'object',
@@ -64,7 +66,8 @@ describe('Zod Adapter implementation', () => {
           email: z.string()
         })
       ]);
-      const chunks = zod(schema);
+      const adapter = zod(schema);
+      const chunks = adapter.extractChunks();
       expect(chunks).toEqual([
         {
           type: 'object',
@@ -103,7 +106,8 @@ describe('Zod Adapter implementation', () => {
           })
         ])
       });
-      const chunks = zod(schema);
+      const adapter = zod(schema);
+      const chunks = adapter.extractChunks();
       expect(chunks).toEqual([
         {
           type: 'object',
