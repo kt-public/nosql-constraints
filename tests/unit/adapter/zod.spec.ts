@@ -1,13 +1,13 @@
-import { describe, expect, it } from "vitest";
-import { z } from "zod";
-import { zod } from "../../../src";
+import { describe, expect, it } from 'vitest';
+import { z } from 'zod';
+import { zod } from '../../../src';
 
 describe('Zod Adapter implementation', () => {
   describe('ZodObject', () => {
     it('should be able to extract simple ZodObject', () => {
       const schema = z.object({
         name: z.string(),
-        age: z.number(),
+        age: z.number()
       });
       const chunks = zod(schema);
       expect(chunks).toEqual([
@@ -16,35 +16,37 @@ describe('Zod Adapter implementation', () => {
           type: 'object',
           properties: {
             name: [{ path: 'name', type: 'string' }],
-            age: [{ path: 'age', type: 'number' }],
+            age: [{ path: 'age', type: 'number' }]
           }
-        },
+        }
       ]);
     });
     it('should be able to extract nested ZodObject', () => {
       const schema = z.object({
         user: z.object({
           name: z.string(),
-          age: z.number(),
-        }),
+          age: z.number()
+        })
       });
       const chunks = zod(schema);
-      expect(chunks).toEqual([{
-        type: 'object',
-        path: undefined,
-        properties: {
-          user: [
-            {
-              type: 'object',
-              path: 'user',
-              properties: {
-                name: [{ path: 'user.name', type: 'string' }],
-                age: [{ path: 'user.age', type: 'number' }],
+      expect(chunks).toEqual([
+        {
+          type: 'object',
+          path: undefined,
+          properties: {
+            user: [
+              {
+                type: 'object',
+                path: 'user',
+                properties: {
+                  name: [{ path: 'user.name', type: 'string' }],
+                  age: [{ path: 'user.age', type: 'number' }]
+                }
               }
-            }
-          ]
+            ]
+          }
         }
-      }]);
+      ]);
     });
   });
   describe('ZodUnion', () => {
@@ -53,14 +55,14 @@ describe('Zod Adapter implementation', () => {
         z.object({
           type: z.literal('A'),
           name: z.string(),
-          age: z.number(),
+          age: z.number()
         }),
         z.object({
           type: z.literal('B'),
           firstname: z.string(),
           surname: z.string(),
-          email: z.string(),
-        }),
+          email: z.string()
+        })
       ]);
       const chunks = zod(schema);
       expect(chunks).toEqual([
@@ -70,7 +72,7 @@ describe('Zod Adapter implementation', () => {
           properties: {
             type: [{ path: 'type', type: 'literal', value: 'A' }],
             name: [{ path: 'name', type: 'string' }],
-            age: [{ path: 'age', type: 'number' }],
+            age: [{ path: 'age', type: 'number' }]
           }
         },
         {
@@ -80,9 +82,9 @@ describe('Zod Adapter implementation', () => {
             type: [{ path: 'type', type: 'literal', value: 'B' }],
             firstname: [{ path: 'firstname', type: 'string' }],
             surname: [{ path: 'surname', type: 'string' }],
-            email: [{ path: 'email', type: 'string' }],
+            email: [{ path: 'email', type: 'string' }]
           }
-        },
+        }
       ]);
     });
     it('should be able to extract nested ZodUnion', () => {
@@ -91,44 +93,46 @@ describe('Zod Adapter implementation', () => {
           z.object({
             type: z.literal('A'),
             name: z.string(),
-            age: z.number(),
+            age: z.number()
           }),
           z.object({
             type: z.literal('B'),
             firstname: z.string(),
             surname: z.string(),
-            email: z.string(),
-          }),
-        ]),
+            email: z.string()
+          })
+        ])
       });
       const chunks = zod(schema);
-      expect(chunks).toEqual([{
-        type: 'object',
-        path: undefined,
-        properties: {
-          user: [
-            {
-              type: 'object',
-              path: 'user',
-              properties: {
-                type: [{ path: 'user.type', type: 'literal', value: 'A' }],
-                name: [{ path: 'user.name', type: 'string' }],
-                age: [{ path: 'user.age', type: 'number' }],
+      expect(chunks).toEqual([
+        {
+          type: 'object',
+          path: undefined,
+          properties: {
+            user: [
+              {
+                type: 'object',
+                path: 'user',
+                properties: {
+                  type: [{ path: 'user.type', type: 'literal', value: 'A' }],
+                  name: [{ path: 'user.name', type: 'string' }],
+                  age: [{ path: 'user.age', type: 'number' }]
+                }
+              },
+              {
+                type: 'object',
+                path: 'user',
+                properties: {
+                  type: [{ path: 'user.type', type: 'literal', value: 'B' }],
+                  firstname: [{ path: 'user.firstname', type: 'string' }],
+                  surname: [{ path: 'user.surname', type: 'string' }],
+                  email: [{ path: 'user.email', type: 'string' }]
+                }
               }
-            },
-            {
-              type: 'object',
-              path: 'user',
-              properties: {
-                type: [{ path: 'user.type', type: 'literal', value: 'B' }],
-                firstname: [{ path: 'user.firstname', type: 'string' }],
-                surname: [{ path: 'user.surname', type: 'string' }],
-                email: [{ path: 'user.email', type: 'string' }],
-              }
-            },
-          ]
+            ]
+          }
         }
-      }]);
+      ]);
     });
   });
 });

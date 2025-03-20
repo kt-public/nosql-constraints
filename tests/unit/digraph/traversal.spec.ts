@@ -1,9 +1,10 @@
 import { describe, expect, test } from 'vitest';
-
 import { DiGraph, Traversal } from '../../../src/digraph/digraph';
 import type { VertexDefinition, VertexId } from '../../../src/digraph/types';
 
-type Vertex = VertexDefinition<Record<string, unknown>, undefined> & { body: Record<string, unknown> };
+type Vertex = VertexDefinition<Record<string, unknown>, undefined> & {
+  body: Record<string, unknown>;
+};
 
 function* createRawVertices(...ids: VertexId[]): Generator<Vertex> {
   for (const id of ids) {

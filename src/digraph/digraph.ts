@@ -3,16 +3,24 @@ import { EdgeBody, EdgeDefinition, EdgeId, VertexBody, VertexDefinition, VertexI
 
 export type Traversal = 'bfs' | 'dfs';
 
-export class DiGraph<Vertex extends VertexDefinition<VertexBody, EdgeBody> = VertexDefinition<Record<string, unknown>, Record<string, unknown>>> {
+export class DiGraph<
+  Vertex extends VertexDefinition<VertexBody, EdgeBody> = VertexDefinition<
+    Record<string, unknown>,
+    Record<string, unknown>
+  >
+> {
   #vertices: Map<VertexId, Vertex>;
 
   constructor() {
     this.#vertices = new Map();
   }
 
-  static fromRaw<Vertex extends VertexDefinition<VertexBody, EdgeBody> = VertexDefinition<Record<string, unknown>, Record<string, unknown>>>(
-    raw: Record<VertexId, Vertex>
-  ): DiGraph<Vertex> {
+  static fromRaw<
+    Vertex extends VertexDefinition<VertexBody, EdgeBody> = VertexDefinition<
+      Record<string, unknown>,
+      Record<string, unknown>
+    >
+  >(raw: Record<VertexId, Vertex>): DiGraph<Vertex> {
     const digraph = new DiGraph<Vertex>();
 
     for (const vertex of Object.values(raw)) {
@@ -228,8 +236,7 @@ export class DiGraph<Vertex extends VertexDefinition<VertexBody, EdgeBody> = Ver
    * assert.deepEqual(graph.getParents("B"), [VertexA]) // ok
    */
   public getParents(rootVertexId: VertexId): Vertex[] {
-    return [...this.#vertices.values()]
-      .filter((vertex) => rootVertexId in (vertex.adjacentTo));
+    return [...this.#vertices.values()].filter((vertex) => rootVertexId in vertex.adjacentTo);
   }
 
   /**

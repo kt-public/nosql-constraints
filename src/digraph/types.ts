@@ -11,7 +11,7 @@ export type VertexDefinition<VBody extends VertexBody, EBody extends EdgeBody> =
 export type EdgeId = {
   from: VertexId;
   to: VertexId;
-}
+};
 export type EdgeDefinition<Body extends EdgeBody> = EdgeId & {
   body?: Body;
 };

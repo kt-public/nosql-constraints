@@ -21,7 +21,10 @@ function extractChunks(schema: ZodSchema, parentPath: string | undefined): Docum
   }
 }
 
-function extractChunkFromObject(schema: ZodObject<ZodRawShape>, parentPath: string | undefined): DocumentSchemaChunk {
+function extractChunkFromObject(
+  schema: ZodObject<ZodRawShape>,
+  parentPath: string | undefined
+): DocumentSchemaChunk {
   const properties: Record<string, DocumentSchemaChunk[]> = {};
   for (const [key, value] of Object.entries(schema.shape)) {
     const path = `${parentPath ? `${parentPath}.` : ''}${key}`;
@@ -30,6 +33,6 @@ function extractChunkFromObject(schema: ZodObject<ZodRawShape>, parentPath: stri
   return {
     path: parentPath,
     type: 'object',
-    properties,
+    properties
   };
 }
