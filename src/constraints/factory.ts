@@ -1,23 +1,23 @@
-import { DocumentSchemaAdapter, DocumentSchemaChunk } from "../adapter/schema";
-import { DiGraph } from "../digraph";
+import { DocumentSchemaAdapter, DocumentSchemaChunk } from '../adapter/schema';
+import { DiGraph } from '../digraph';
 
 type RefDocTypeLiteral = string | number | boolean | undefined | null;
 
 type VertexProperties = {
   containerId: string;
   refDocType?: Record<string, RefDocTypeLiteral>;
-}
+};
 type EdgeProperties = {
   cascadeDelete?: true;
   refProperties?: Record<string, string>;
-}
+};
 // const ReferencingPropertyNameRegex = /^(.+)(Id|Ids)$/;
 
 // Constraint document -> document reference
 type DocumentReference = {
   containerId: string;
   refDocType?: Record<string, RefDocTypeLiteral>;
-}
+};
 type DocumentReferenceConstraint = EdgeProperties & {
   refProperties: Record<string, string>;
 };
@@ -48,7 +48,11 @@ export class ConstraintFactory {
     chunks.push(...newChunks);
   }
 
-  public addDocument2DocumentConstraint(referencing: DocumentReference, referenced: DocumentReference, constraint: DocumentReferenceConstraint): void {
+  public addDocument2DocumentConstraint(
+    referencing: DocumentReference,
+    referenced: DocumentReference,
+    constraint: DocumentReferenceConstraint
+  ): void {
     // referenced = from, referencing = to
     const from = `${referenced.containerId}/${JSON.stringify(referenced.refDocType)}`;
     this.#constraintGraph.addVertex({ id: from });
@@ -62,7 +66,11 @@ export class ConstraintFactory {
     this.#edgeProperties.set(`${from} -> ${to}`, constraint);
   }
 
-  public addPartition2DocumentConstraint(referencing: PartitionReference, referenced: DocumentReference, constraint: PartitionReferenceConstraint): void {
+  public addPartition2DocumentConstraint(
+    referencing: PartitionReference,
+    referenced: DocumentReference,
+    constraint: PartitionReferenceConstraint
+  ): void {
     // referenced = from, referencing = to
     const from = `${referenced.containerId}`;
     this.#constraintGraph.addVertex({ id: from });
