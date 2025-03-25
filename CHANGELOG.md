@@ -1,5 +1,14 @@
 # nosql-constraints
 
+## 0.0.7
+
+### Patch Changes
+
+- e238e95: dependabot(deps-dev): bump @types/node from 22.13.10 to 22.13.11
+- 8f0fd4c: dependabot: bump @types/node from 22.13.11 to 22.13.12 in the all group
+- 6f38f9c: dependabot: bump the all group with 2 updates
+- 398ab2a: dependabot(deps-dev): bump eslint from 9.22.0 to 9.23.0
+
 ## 0.0.6
 
 ### Patch Changes
