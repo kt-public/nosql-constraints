@@ -14,6 +14,10 @@ export class DiGraph<
     this.#vertices = new Map();
   }
 
+  get vertices(): Vertex[] {
+    return [...this.#vertices.values()];
+  }
+
   static fromRaw<
     VertexBody = never,
     Vertex extends VertexDefinition<VertexBody> = VertexDefinition<VertexBody>
