@@ -1,0 +1,82 @@
+import { describe, it } from 'vitest';
+import { z } from 'zod';
+import { zod } from '../../../src';
+import { ConstraintFactory } from '../../../src/constraints/factory';
+
+const container1DocSchema1 = z.object({
+  id: z.string(),
+  type: z.literal('C1A'),
+  name: z.string(),
+  age: z.number()
+});
+const container1DocSchema2 = z.object({
+  id: z.string(),
+  type: z.literal('C1B'),
+  firstname: z.string(),
+  surname: z.string(),
+  email: z.string(),
+  childrenRefIds: z.array(z.string())
+});
+const container1DocSchema = z.discriminatedUnion('type', [
+  container1DocSchema1,
+  container1DocSchema2
+]);
+const container2DocSchema1 = z.object({
+  id: z.string(),
+  type: z.literal('C2A'),
+  title: z.string(),
+  description: z.string(),
+  buddyId: z.string()
+});
+const container2DocSchema2 = z.object({
+  id: z.string(),
+  type: z.literal('C2B'),
+  title: z.string(),
+  description: z.string(),
+  buddyIds: z.array(z.string())
+});
+const container2DocSchema3 = z.object({
+  id: z.string(),
+  type: z.literal('C2C'),
+  title: z.string(),
+  description: z.string(),
+  parents: z.array(z.object({
+    parentId: z.string(),
+    comment: z.string()
+  }))
+});
+const container2DocSchema = z.discriminatedUnion('type', [
+  container2DocSchema1,
+  container2DocSchema2,
+  container2DocSchema3
+]);
+
+const testCaseSchemas = {
+  container1: container1DocSchema,
+  container2: container2DocSchema
+}
+
+describe('Constraint factory', () => {
+  describe('Document 2 Document constraint', () => {
+    it('should be able to add: container2/doc1.buddyId -> container1/doc1.id', () => {
+      const factory = new ConstraintFactory();
+      factory.addDocumentSchema('container1', zod(testCaseSchemas.container1));
+      factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
+      factory.addDocument2DocumentConstraint(
+        { containerId: 'container2', refDocType: { type: 'C2A' } },
+        { refProperties: { buddyId: 'id' } },
+        { containerId: 'container1', refDocType: { type: 'C1A' } }
+      );
+    });
+    it('should be able to add: container2/doc2.buddyIds -> container1/doc1.id', () => {
+      const factory = new ConstraintFactory();
+      factory.addDocumentSchema('container1', zod(testCaseSchemas.container1));
+      factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
+      factory.addDocument2DocumentConstraint(
+        { containerId: 'container2', refDocType: { type: 'C2B' } },
+        { refProperties: { 'buddyIds.[]': 'id' } },
+        { containerId: 'container1', refDocType: { type: 'C1A' } }
+      );
+    });
+  });
+});

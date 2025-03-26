@@ -1,4 +1,4 @@
-import { ZodLiteral, ZodNumber, ZodObject, ZodRawShape, ZodSchema, ZodString, ZodUnion } from 'zod';
+import { ZodArray, ZodDiscriminatedUnion, ZodLiteral, ZodNumber, ZodObject, ZodRawShape, ZodSchema, ZodString, ZodTypeAny, ZodUnion } from 'zod';
 import { DocumentSchemaAdapter, DocumentSchemaChunk } from './schema';
 
 export function zod(schema: ZodSchema): DocumentSchemaAdapter {
@@ -18,6 +18,8 @@ class ZodAdapter implements DocumentSchemaAdapter {
 function extractChunks(schema: ZodSchema, parentPath: string | undefined): DocumentSchemaChunk[] {
   if (schema instanceof ZodUnion) {
     return schema.options.map((option: ZodSchema) => extractChunks(option, parentPath)).flat();
+  } else if (schema instanceof ZodDiscriminatedUnion) {
+    return schema.options.map((option: ZodSchema) => extractChunks(option, parentPath)).flat();
   } else if (schema instanceof ZodObject) {
     return [extractChunkFromObject(schema, parentPath)];
   } else if (schema instanceof ZodString) {
@@ -26,8 +28,10 @@ function extractChunks(schema: ZodSchema, parentPath: string | undefined): Docum
     return [{ path: parentPath, type: 'number' }];
   } else if (schema instanceof ZodLiteral) {
     return [{ path: parentPath, type: 'literal', value: schema.value }];
+  } else if (schema instanceof ZodArray) {
+    return [extractChunksFromArray(schema, parentPath)];
   } else {
-    throw new Error('Unknown schema type');
+    throw new Error(`Unsupported schema type: ${schema.constructor.name}`);
   }
 }
 
@@ -44,5 +48,16 @@ function extractChunkFromObject(
     path: parentPath,
     type: 'object',
     properties
+  };
+}
+
+function extractChunksFromArray(schema: ZodArray<ZodTypeAny>, parentPath: string | undefined): DocumentSchemaChunk {
+  const path = parentPath ? `${parentPath}.[]` : '[]';
+  return {
+    path: parentPath,
+    type: 'array',
+    properties: {
+      '[]': extractChunks(schema.element, path)
+    }
   };
 }
