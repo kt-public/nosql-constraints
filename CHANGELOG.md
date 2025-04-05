@@ -1,5 +1,20 @@
 # nosql-constraints
 
+## 0.0.8
+
+### Patch Changes
+
+- a1393dc: dependabot: bump the all group with 2 updates
+- 7dcaa99: dependabot: bump @types/node from 22.13.13 to 22.13.14 in the all group
+- 7dcaa99: dependabot: bump @types/node from 22.13.13 to 22.13.14 in the all group
+- dc6add7: dependabot: bump the all group with 2 updates
+- 7dcaa99: dependabot: bump @types/node from 22.13.13 to 22.13.14 in the all group
+- 00f2b02: dependabot: bump tsc-alias from 1.8.11 to 1.8.13 in the all group
+- 5c3909b: dependabot: update @types/node
+- 5c3909b: dependabot: update eslint
+- 5c3909b: dependabot: update publint
+- 5c3909b: dependabot: update typescript
+
 ## 0.0.7
 
 ### Patch Changes
