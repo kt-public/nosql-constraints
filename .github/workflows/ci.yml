@@ -16,11 +16,11 @@ permissions:
   contents: read # to fetch code (actions/checkout)
 
 jobs:
-  echo:
-    runs-on: ubuntu-latest
-    steps:
-      - run: ${{ tojson(github) }}
-        shell: cat {0}
+  # echo:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - run: ${{ tojson(github) }}
+  #       shell: cat {0}
   check:
     runs-on: ubuntu-latest
     steps:
@@ -45,14 +45,14 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
-  # codeql:
-  #   uses: ./.github/workflows/codeql.yml
-  #   secrets: inherit
-  #   permissions:
-  #     # required for all workflows
-  #     security-events: write
-  #     # required to fetch internal or private CodeQL packs
-  #     packages: read
-  #     # only required for workflows in private repositories
-  #     actions: read
-  #     contents: read
+  codeql:
+    uses: ./.github/workflows/codeql.yml
+    secrets: inherit
+    permissions:
+      # required for all workflows
+      security-events: write
+      # required to fetch internal or private CodeQL packs
+      packages: read
+      # only required for workflows in private repositories
+      actions: read
+      contents: read
