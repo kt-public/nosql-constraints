@@ -63,25 +63,3 @@ jobs:
           NPM_CONFIG_PROVENANCE: true
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         continue-on-error: true
-
-      # cat error log from npm, file could be something like this: /home/runner/.npm/_logs/2025-04-05T17_32_44_589Z-debug-0.log
-      # But we don't know the name of the file, so we need to find it
-      # Loop over the log files, print log file name and contents
-      - name: Check for npm error log
-        id: check-npm-error-log
-        run: |
-          # Check if there are any npm error logs
-          echo "Checking for npm error log file..."
-          if ls /home/runner/.npm/_logs/*.log 1> /dev/null 2>&1; then
-            echo "npm error log file found"
-            echo "npm_error_log=true" >> $GITHUB_ENV
-          else
-            echo "No npm error log file found"
-            echo "npm_error_log=false" >> $GITHUB_ENV
-          fi
-          # Loop over the log files, print log file name and contents
-          for file in /home/runner/.npm/_logs/*.log; do
-            echo "Log file: $file"
-            cat "$file"
-          done
-          exit -1
