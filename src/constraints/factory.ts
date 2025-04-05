@@ -240,7 +240,9 @@ export class ConstraintFactory {
   ): void {
     // Check that all partitionKeyProperties are present in the referencing schema
     // At least one chunk should have all partitionKeyProperties
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const referencingChunks = this.findPartitionSchemaChunks(referencing);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const referencedChunks = this.findDocumentSchemaChunks(referenced);
   }
 
@@ -252,7 +254,7 @@ export class ConstraintFactory {
     // Validate first
     this.validatePartitionReference(referencing);
     this.validateDocumentReference(referenced);
-    this.validatePartition2DocConstraint(referencing, referenced, constraint);
+    this.validatePartition2DocConstraint(referencing, constraint, referenced);
 
     // referenced = from, referencing = to
     const from = `${referenced.containerId}`;
