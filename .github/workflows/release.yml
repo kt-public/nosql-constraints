@@ -73,3 +73,4 @@ jobs:
           npm_error_log=$(ls -t /home/runner/.npm/_logs/*.log | head -n 1)
           echo "npm error log file: $npm_error_log"
           cat /home/runner/.npm/_logs/*.log
+          exit -1
