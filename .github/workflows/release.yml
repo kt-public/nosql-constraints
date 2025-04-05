@@ -71,5 +71,5 @@ jobs:
           # Find the latest npm error log file
           echo "Finding npm error log file..."
           npm_error_log=$(ls -t /home/runner/.npm/_logs/*.log | head -n 1)
-          echo "npm_error_log=$npm_error_log" >> $GITHUB_OUTPUT
+          echo "npm error log file: $npm_error_log"
           cat $npm_error_log
