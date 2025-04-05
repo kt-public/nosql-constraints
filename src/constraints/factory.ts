@@ -25,9 +25,8 @@ type Doc2DocConstraint = EdgeProperties & {
   refProperties: Record<string, string>;
 };
 // Constraint document -> partition reference
-type PartitionKey = string | number;
 type PartitionReference = ContainerReference & {
-  partitionKeys: PartitionKey[];
+  partitionKeyProperties: string[];
 };
 type PartitionReferenceConstraint = Doc2DocConstraint;
 
@@ -72,22 +71,24 @@ export class ConstraintFactory {
       }
 
       for (const [refProperty, refValue] of Object.entries(refDocType)) {
-        const schemaProperty = Object.entries(chunk.properties ?? {}).find(([property, _chunks]) => {
-          if (property !== refProperty) return false;
-          // So the name matches, now we need to check the type
-          // The refValue is the concrete value
-          // the _chunks is the schema, describing the property, it can be a literal, union of literals, or a just a type
-          // So we check if literal matches the refValue, or if the type matches the type of refValue
-          for (const _chunk of _chunks) {
-            if (_chunk.type === 'literal') {
-              if (_chunk.value === refValue) {
+        const schemaProperty = Object.entries(chunk.properties ?? {}).find(
+          ([property, _chunks]) => {
+            if (property !== refProperty) return false;
+            // So the name matches, now we need to check the type
+            // The refValue is the concrete value
+            // the _chunks is the schema, describing the property, it can be a literal, union of literals, or a just a type
+            // So we check if literal matches the refValue, or if the type matches the type of refValue
+            for (const _chunk of _chunks) {
+              if (_chunk.type === 'literal') {
+                if (_chunk.value === refValue) {
+                  return true;
+                }
+              } else if (_chunk.type === typeof refValue) {
                 return true;
               }
-            } else if (_chunk.type === typeof refValue) {
-              return true;
             }
           }
-        });
+        );
         if (!schemaProperty) {
           break;
         }
@@ -98,6 +99,28 @@ export class ConstraintFactory {
       if (allFound) {
         result.push(chunk);
       }
+    }
+    return result;
+  }
+
+  protected findPartitionSchemaChunks(partitionRef: PartitionReference): DocumentSchemaChunk[] {
+    const { containerId } = partitionRef;
+    const chunks = this.#containerSchemaChunks.get(containerId);
+    if (!chunks || chunks.length === 0) {
+      throw new Error(`Missing schema for container ${containerId}`);
+    }
+    if (!partitionRef.partitionKeyProperties || partitionRef.partitionKeyProperties.length === 0) {
+      return chunks;
+    }
+    const result: DocumentSchemaChunk[] = [];
+    // partitionKeys are the properties that need to be present in the schema
+    // they can be . separated paths
+    for (const partitionKeyProperty of partitionRef.partitionKeyProperties) {
+      const partitionChunks = this.findChunksForProperty(chunks, partitionKeyProperty);
+      if (!partitionChunks || partitionChunks.length === 0) {
+        break;
+      }
+      result.push(...partitionChunks);
     }
     return result;
   }
@@ -114,7 +137,7 @@ export class ConstraintFactory {
 
   protected findChunksForProperty(
     chunks: DocumentSchemaChunk[],
-    propertyPath: string,
+    propertyPath: string
   ): DocumentSchemaChunk[] | undefined {
     // We need to drill down the property path
     // and find the chunks that match the whole path
@@ -144,7 +167,7 @@ export class ConstraintFactory {
   protected validateDoc2DocConstraint(
     referencing: DocumentReference,
     constraint: Doc2DocConstraint,
-    referenced: DocumentReference,
+    referenced: DocumentReference
   ): void {
     // Check that all refProperties are present in the referencing schema
     // At least one chunk should have all refProperties
@@ -153,13 +176,23 @@ export class ConstraintFactory {
     // Ref properties can be . separated paths
     for (const refProperty of Object.entries(constraint.refProperties)) {
       const [referencingProperty, referencedProperty] = refProperty;
-      const foundReferencingChunks = this.findChunksForProperty(referencingChunks, referencingProperty);
+      const foundReferencingChunks = this.findChunksForProperty(
+        referencingChunks,
+        referencingProperty
+      );
       if (!foundReferencingChunks || foundReferencingChunks.length === 0) {
-        throw new Error(`Failed to validate referencing constraint ${referencing.containerId}/${JSON.stringify(referencing.refDocType)}/${referencingProperty}: property not found`);
+        throw new Error(
+          `Failed to validate referencing constraint ${referencing.containerId}/${JSON.stringify(referencing.refDocType)}/${referencingProperty}: property not found`
+        );
       }
-      const foundReferencedChunks = this.findChunksForProperty(referencedChunks, referencedProperty);
+      const foundReferencedChunks = this.findChunksForProperty(
+        referencedChunks,
+        referencedProperty
+      );
       if (!foundReferencedChunks || foundReferencedChunks.length === 0) {
-        throw new Error(`Failed to validate referenced constraint ${referenced.containerId}/${JSON.stringify(referenced.refDocType)}/${referencedProperty}: property not found`);
+        throw new Error(
+          `Failed to validate referenced constraint ${referenced.containerId}/${JSON.stringify(referenced.refDocType)}/${referencedProperty}: property not found`
+        );
       }
     }
   }
@@ -167,7 +200,7 @@ export class ConstraintFactory {
   public addDocument2DocumentConstraint(
     referencing: DocumentReference,
     constraint: Doc2DocConstraint,
-    referenced: DocumentReference,
+    referenced: DocumentReference
   ): void {
     // Validate first
     this.validateDocumentReference(referencing);
@@ -192,10 +225,29 @@ export class ConstraintFactory {
     this.#edgeProperties.set(edgeId, constraint);
   }
 
+  protected validatePartitionReference(partitionRef: PartitionReference): void {
+    // Check that vertex has schema
+    const chunks = this.findPartitionSchemaChunks(partitionRef);
+    if (!chunks || chunks.length === 0) {
+      throw new Error(`Missing schema for container ${partitionRef.containerId}`);
+    }
+  }
+
+  protected validatePartition2DocConstraint(
+    referencing: PartitionReference,
+    constraint: PartitionReferenceConstraint,
+    referenced: DocumentReference
+  ): void {
+    // Check that all partitionKeyProperties are present in the referencing schema
+    // At least one chunk should have all partitionKeyProperties
+    const referencingChunks = this.findPartitionSchemaChunks(referencing);
+    const referencedChunks = this.findDocumentSchemaChunks(referenced);
+  }
+
   public addPartition2DocumentConstraint(
     referencing: PartitionReference,
-    referenced: DocumentReference,
-    constraint: PartitionReferenceConstraint
+    constraint: PartitionReferenceConstraint,
+    referenced: DocumentReference
   ): void {
     // Validate first
     this.validatePartitionReference(referencing);

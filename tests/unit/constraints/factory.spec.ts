@@ -40,10 +40,12 @@ const container2DocSchema3 = z.object({
   type: z.literal('C2C'),
   title: z.string(),
   description: z.string(),
-  parents: z.array(z.object({
-    parentId: z.string(),
-    comment: z.string()
-  }))
+  parents: z.array(
+    z.object({
+      parentId: z.string(),
+      comment: z.string()
+    })
+  )
 });
 const container2DocSchema = z.discriminatedUnion('type', [
   container2DocSchema1,
@@ -54,7 +56,7 @@ const container2DocSchema = z.discriminatedUnion('type', [
 const testCaseSchemas = {
   container1: container1DocSchema,
   container2: container2DocSchema
-}
+};
 
 describe('Constraint factory', () => {
   describe('Document 2 Document constraint', () => {
