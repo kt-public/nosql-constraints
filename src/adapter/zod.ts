@@ -1,4 +1,15 @@
-import { ZodArray, ZodDiscriminatedUnion, ZodLiteral, ZodNumber, ZodObject, ZodRawShape, ZodSchema, ZodString, ZodTypeAny, ZodUnion } from 'zod';
+import {
+  ZodArray,
+  ZodDiscriminatedUnion,
+  ZodLiteral,
+  ZodNumber,
+  ZodObject,
+  ZodRawShape,
+  ZodSchema,
+  ZodString,
+  ZodTypeAny,
+  ZodUnion
+} from 'zod';
 import { DocumentSchemaAdapter, DocumentSchemaChunk } from './schema';
 
 export function zod(schema: ZodSchema): DocumentSchemaAdapter {
@@ -51,7 +62,10 @@ function extractChunkFromObject(
   };
 }
 
-function extractChunksFromArray(schema: ZodArray<ZodTypeAny>, parentPath: string | undefined): DocumentSchemaChunk {
+function extractChunksFromArray(
+  schema: ZodArray<ZodTypeAny>,
+  parentPath: string | undefined
+): DocumentSchemaChunk {
   const path = parentPath ? `${parentPath}.[]` : '[]';
   return {
     path: parentPath,
