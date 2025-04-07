@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import { DocumentSchemaAdapter, DocumentSchemaChunk } from '../adapter/schema';
 import { DiGraph } from '../digraph';
 
@@ -10,7 +11,6 @@ type VertexProperties = {
 };
 type EdgeProperties = {
   cascadeDelete?: true;
-  mapProperties?: Record<string, string>;
 };
 // const ReferencingPropertyNameRegex = /^(.+)(Id|Ids)$/;
 
@@ -29,6 +29,9 @@ type PartitionReference = ContainerReference & {
   partitionKeyProperties: string[];
 };
 type PartitionReferenceConstraint = Doc2DocConstraint;
+type DocCompoundConstraint = EdgeProperties & {
+  compoundProperties: string[];
+};
 
 export class ConstraintFactory {
   #containerSchemaAdapters = new Map<string, DocumentSchemaAdapter[]>();
@@ -105,24 +108,23 @@ export class ConstraintFactory {
 
   protected findPartitionSchemaChunks(partitionRef: PartitionReference): DocumentSchemaChunk[] {
     const { containerId } = partitionRef;
-    const chunks = this.#containerSchemaChunks.get(containerId);
-    if (!chunks || chunks.length === 0) {
+    let currentChunks = this.#containerSchemaChunks.get(containerId);
+    if (!currentChunks || currentChunks.length === 0) {
       throw new Error(`Missing schema for container ${containerId}`);
     }
     if (!partitionRef.partitionKeyProperties || partitionRef.partitionKeyProperties.length === 0) {
-      return chunks;
+      return currentChunks;
     }
-    const result: DocumentSchemaChunk[] = [];
     // partitionKeys are the properties that need to be present in the schema
     // they can be . separated paths
+    // Each partitionKeyProperty must be present in the document schema chunk
     for (const partitionKeyProperty of partitionRef.partitionKeyProperties) {
-      const partitionChunks = this.findChunksForProperty(chunks, partitionKeyProperty);
-      if (!partitionChunks || partitionChunks.length === 0) {
+      currentChunks = this.findDocumentSchemaChunksForProperty(currentChunks, partitionKeyProperty);
+      if (!currentChunks || currentChunks.length === 0) {
         break;
       }
-      result.push(...partitionChunks);
     }
-    return result;
+    return currentChunks;
   }
 
   protected validateDocumentReference(docRef: DocumentReference): void {
@@ -135,32 +137,44 @@ export class ConstraintFactory {
     }
   }
 
-  protected findChunksForProperty(
-    chunks: DocumentSchemaChunk[],
+  protected findPropertySchemaChunksForProperty(
+    chunk: DocumentSchemaChunk,
     propertyPath: string
-  ): DocumentSchemaChunk[] | undefined {
+  ): DocumentSchemaChunk[] {
     // We need to drill down the property path
     // and find the chunks that match the whole path
+    let currentChunks = [chunk];
     const path = propertyPath.split('.');
-    let foundChunks: DocumentSchemaChunk[] = [];
-    let currentChunks = chunks;
     for (const property of path) {
-      foundChunks = [];
-      for (const chunk of currentChunks) {
-        if (!chunk.properties) {
+      const foundChunks: DocumentSchemaChunk[] = [];
+      for (const currentChunk of currentChunks) {
+        if (!currentChunk.properties) {
           continue;
         }
-        const propertyChunks = chunk.properties[property];
+        const propertyChunks = currentChunk.properties[property];
         if (!propertyChunks) {
           continue;
         }
         foundChunks.push(...propertyChunks);
       }
       if (foundChunks.length === 0) {
-        return undefined;
+        return [];
       }
       currentChunks = foundChunks;
     }
+    // If we reach here, we have found the property
+    return currentChunks;
+  }
+
+  protected findDocumentSchemaChunksForProperty(
+    chunks: DocumentSchemaChunk[],
+    propertyPath: string
+  ): DocumentSchemaChunk[] {
+    // The return value is are the chunks from the provided chunks
+    // that have propertyPath as a property
+    const foundChunks: DocumentSchemaChunk[] = chunks.filter(
+      (chunk) => this.findPropertySchemaChunksForProperty(chunk, propertyPath).length > 0
+    );
     return foundChunks;
   }
 
@@ -176,7 +190,7 @@ export class ConstraintFactory {
     // Ref properties can be . separated paths
     for (const refProperty of Object.entries(constraint.refProperties)) {
       const [referencingProperty, referencedProperty] = refProperty;
-      const foundReferencingChunks = this.findChunksForProperty(
+      const foundReferencingChunks = this.findDocumentSchemaChunksForProperty(
         referencingChunks,
         referencingProperty
       );
@@ -185,7 +199,7 @@ export class ConstraintFactory {
           `Failed to validate referencing constraint ${referencing.containerId}/${JSON.stringify(referencing.refDocType)}/${referencingProperty}: property not found`
         );
       }
-      const foundReferencedChunks = this.findChunksForProperty(
+      const foundReferencedChunks = this.findDocumentSchemaChunksForProperty(
         referencedChunks,
         referencedProperty
       );
@@ -209,15 +223,68 @@ export class ConstraintFactory {
 
     // referenced = from, referencing = to
     const from = `${referenced.containerId}/${JSON.stringify(referenced.refDocType)}`;
+    const to = `${referencing.containerId}/${JSON.stringify(referencing.refDocType)}`;
+    if (from === to) {
+      throw new Error(`Cannot create constraint from and to the same document: ${from} == ${to}`);
+    }
+    const edgeId = `${from} -> ${JSON.stringify(constraint.refProperties)} -> ${to}`;
+
     this.#constraintGraph.addVertex({ id: from });
     this.#vertexProperties.set(from, referenced);
 
-    const to = `${referencing.containerId}/${JSON.stringify(referencing.refDocType)}`;
     this.#constraintGraph.addVertex({ id: to });
     this.#vertexProperties.set(to, referencing);
 
     // Check that the edge does not already exist
-    const edgeId = `${from} -> ${JSON.stringify(constraint.refProperties)} -> ${to}`;
+    if (this.#edgeProperties.has(edgeId)) {
+      throw new Error(`Edge ${edgeId} already exists`);
+    }
+    this.#constraintGraph.addEdge({ from, to });
+    this.#edgeProperties.set(edgeId, constraint);
+  }
+
+  protected validateDocCompoundConstraint(
+    compound: DocumentReference,
+    constraint: DocCompoundConstraint
+  ): void {
+    // Check that all compoundProperties are all present in all document schema chunks
+    const compoundChunks = this.findDocumentSchemaChunks(compound);
+    const allValid = compoundChunks.every((chunk) => {
+      const allPresent = constraint.compoundProperties.every((compoundProperty) => {
+        const foundChunks = this.findPropertySchemaChunksForProperty(chunk, compoundProperty);
+        return foundChunks.length > 0;
+      });
+      return allPresent;
+    });
+    if (!allValid) {
+      throw new Error(
+        `Failed to validate compound constraint ${compound.containerId}/${JSON.stringify(
+          compound.refDocType
+        )}/${constraint.compoundProperties}: compound properties must be present in each of the referenced document schema chunks`
+      );
+    }
+  }
+
+  public addDocumentCompoundConstraint(
+    compound: DocumentReference,
+    constraint: DocCompoundConstraint
+  ): void {
+    // Validate first
+    this.validateDocumentReference(compound);
+    this.validateDocCompoundConstraint(compound, constraint);
+
+    // referenced = from, referencing = to
+    const from = `${compound.containerId}/${JSON.stringify(compound.refDocType)}`;
+    const to = `${compound.containerId}/${JSON.stringify(compound.refDocType)}/compound`;
+    const edgeId = `${from} -> ${JSON.stringify(constraint.compoundProperties)} -> ${to}`;
+
+    this.#constraintGraph.addVertex({ id: from });
+    this.#vertexProperties.set(from, compound);
+
+    this.#constraintGraph.addVertex({ id: to });
+    this.#vertexProperties.set(to, compound);
+
+    // Check that the edge does not already exist
     if (this.#edgeProperties.has(edgeId)) {
       throw new Error(`Edge ${edgeId} already exists`);
     }
@@ -231,6 +298,15 @@ export class ConstraintFactory {
     if (!chunks || chunks.length === 0) {
       throw new Error(`Missing schema for container ${partitionRef.containerId}`);
     }
+    // found chunks must be exactly all of the chunks for the container -> all documents must contain the provided partition key properties
+    const containerChunks = this.#containerSchemaChunks.get(partitionRef.containerId);
+    if (!_.isEqual(chunks, containerChunks)) {
+      throw new Error(
+        `Partition key properties ${JSON.stringify(
+          partitionRef.partitionKeyProperties
+        )} do not match schema for container ${partitionRef.containerId}. All documents must contain the provided partition key properties.`
+      );
+    }
   }
 
   protected validatePartition2DocConstraint(
@@ -240,10 +316,43 @@ export class ConstraintFactory {
   ): void {
     // Check that all partitionKeyProperties are present in the referencing schema
     // At least one chunk should have all partitionKeyProperties
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const referencingChunks = this.findPartitionSchemaChunks(referencing);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    // Check that all referencing.partitionKeys are present in the constraint.refProperties.keys()
+    const referencingKeys = new Set(Object.keys(constraint.refProperties));
+    const refHasAllPartitionKeys = referencing.partitionKeyProperties.every((partitionKey) =>
+      referencingKeys.has(partitionKey)
+    );
+    if (!refHasAllPartitionKeys) {
+      throw new Error(
+        `Failed to validate referencing constraint ${referencing.containerId}/${JSON.stringify(
+          referencing.partitionKeyProperties
+        )}: all of the partition keys must be present in the keys of the constraint.refProperties`
+      );
+    }
+
     const referencedChunks = this.findDocumentSchemaChunks(referenced);
+    // Ref properties can be . separated paths
+    for (const refProperty of Object.entries(constraint.refProperties)) {
+      const [referencingProperty, referencedProperty] = refProperty;
+      const foundReferencingChunks = this.findDocumentSchemaChunksForProperty(
+        referencingChunks,
+        referencingProperty
+      );
+      if (!foundReferencingChunks || foundReferencingChunks.length === 0) {
+        throw new Error(
+          `Failed to validate referencing constraint ${referencing.containerId}/${JSON.stringify(referencing.partitionKeyProperties)}/${referencingProperty}: property not found`
+        );
+      }
+      const foundReferencedChunks = this.findDocumentSchemaChunksForProperty(
+        referencedChunks,
+        referencedProperty
+      );
+      if (!foundReferencedChunks || foundReferencedChunks.length === 0) {
+        throw new Error(
+          `Failed to validate referenced constraint ${referenced.containerId}/${JSON.stringify(referenced.refDocType)}/${referencedProperty}: property not found`
+        );
+      }
+    }
   }
 
   public addPartition2DocumentConstraint(
@@ -257,16 +366,16 @@ export class ConstraintFactory {
     this.validatePartition2DocConstraint(referencing, constraint, referenced);
 
     // referenced = from, referencing = to
-    const from = `${referenced.containerId}`;
+    const from = `${referenced.containerId}/${JSON.stringify(referenced.refDocType)}`;
     this.#constraintGraph.addVertex({ id: from });
     this.#vertexProperties.set(from, referenced);
 
-    const to = `${referencing.containerId}/partition`;
+    const to = `${referencing.containerId}/${JSON.stringify(referencing.partitionKeyProperties)}`;
     this.#constraintGraph.addVertex({ id: to });
     this.#vertexProperties.set(to, referencing);
 
     // Check that the edge does not already exist
-    const edgeId = `${from} -> ${to}`;
+    const edgeId = `${from} -> ${JSON.stringify(constraint.refProperties)} -> ${to}`;
     if (this.#edgeProperties.has(edgeId)) {
       throw new Error(`Edge ${edgeId} already exists`);
     }
