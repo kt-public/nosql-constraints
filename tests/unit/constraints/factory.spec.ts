@@ -157,7 +157,9 @@ describe('Constraint factory', () => {
         { compoundProperties: ['compoundId'] }
       );
     });
-    it('should fail to add compound: container2/doc3.compoundId -> container2/doc3.compoundId', ({ expect }) => {
+    it('should fail to add compound: container2/doc3.compoundId -> container2/doc3.compoundId', ({
+      expect
+    }) => {
       const factory = new ConstraintFactory();
       factory.addDocumentSchema('container1', zod(testCaseSchemas.container1));
       factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
