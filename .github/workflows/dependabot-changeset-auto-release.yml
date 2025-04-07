@@ -1,4 +1,4 @@
-name: Dependabot changeset auto-release
+name: Dependabot auto-release
 
 on:
   schedule:
