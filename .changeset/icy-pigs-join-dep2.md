@@ -1,5 +1,5 @@
 ---
-'nosql-constraints': patch
+'nosql-constraints': minor
 ---
 
 dependabot: update test xxx 2
