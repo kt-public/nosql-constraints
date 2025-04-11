@@ -1,5 +1,16 @@
 # nosql-constraints
 
+## 0.0.11
+
+### Patch Changes
+
+- b280ae2: Add doc-to-doc, partition-to-doc, compound-doc constraints
+- f981342: dependabot: update eslint-config-prettier
+- f981342: dependabot: update publint
+- a124d3e: dependabot: update tsc-alias
+- f981342: dependabot: update tsc-alias
+- 2d37b60: dependabot: update typescript-eslint
+
 ## 0.0.8
 
 ### Patch Changes
