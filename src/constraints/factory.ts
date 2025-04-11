@@ -1,15 +1,15 @@
 import _ from 'lodash';
+import { DiGraph } from 'ya-digraph-js';
 import { DocumentSchemaAdapter, DocumentSchemaChunk } from '../adapter/schema';
-import { DiGraph } from '../digraph';
 
 type RefDocTypeLiteral = string | number;
 type RefDocType = Record<string, RefDocTypeLiteral>;
 
-type VertexProperties = {
+type Vertex = {
   containerId: string;
   refDocType?: RefDocType;
 };
-type EdgeProperties = {
+type Edge = {
   cascadeDelete?: true;
 };
 // const ReferencingPropertyNameRegex = /^(.+)(Id|Ids)$/;
@@ -21,7 +21,7 @@ type ContainerReference = {
 type DocumentReference = ContainerReference & {
   refDocType?: RefDocType;
 };
-type Doc2DocConstraint = EdgeProperties & {
+type Doc2DocConstraint = Edge & {
   refProperties: Record<string, string>;
 };
 // Constraint document -> partition reference
@@ -29,16 +29,14 @@ type PartitionReference = ContainerReference & {
   partitionKeyProperties: string[];
 };
 type PartitionReferenceConstraint = Doc2DocConstraint;
-type DocCompoundConstraint = EdgeProperties & {
+type DocCompoundConstraint = Edge & {
   compoundProperties: string[];
 };
 
 export class ConstraintFactory {
   #containerSchemaAdapters = new Map<string, DocumentSchemaAdapter[]>();
   #containerSchemaChunks = new Map<string, DocumentSchemaChunk[]>();
-  #vertexProperties = new Map<string, VertexProperties>();
-  #edgeProperties = new Map<string, EdgeProperties>();
-  #constraintGraph = new DiGraph();
+  readonly #constraintsGraph = new DiGraph<Vertex, Edge>();
 
   public addDocumentSchema(containerId: string, schema: DocumentSchemaAdapter): void {
     let adapters = this.#containerSchemaAdapters.get(containerId);
@@ -224,23 +222,12 @@ export class ConstraintFactory {
     // referenced = from, referencing = to
     const from = `${referenced.containerId}/${JSON.stringify(referenced.refDocType)}`;
     const to = `${referencing.containerId}/${JSON.stringify(referencing.refDocType)}`;
-    if (from === to) {
-      throw new Error(`Cannot create constraint from and to the same document: ${from} == ${to}`);
-    }
-    const edgeId = `${from} -> ${JSON.stringify(constraint.refProperties)} -> ${to}`;
-
-    this.#constraintGraph.addVertex({ id: from });
-    this.#vertexProperties.set(from, referenced);
-
-    this.#constraintGraph.addVertex({ id: to });
-    this.#vertexProperties.set(to, referencing);
-
-    // Check that the edge does not already exist
-    if (this.#edgeProperties.has(edgeId)) {
-      throw new Error(`Edge ${edgeId} already exists`);
-    }
-    this.#constraintGraph.addEdge({ from, to });
-    this.#edgeProperties.set(edgeId, constraint);
+    //const edgeId = `${from} -> ${JSON.stringify(constraint.refProperties)} -> ${to}`;
+    this.#constraintsGraph.addVertices(
+      { id: from, vertex: referenced },
+      { id: to, vertex: referencing }
+    );
+    this.#constraintsGraph.addEdges({ from, to, edge: constraint });
   }
 
   protected validateDocCompoundConstraint(
@@ -276,20 +263,13 @@ export class ConstraintFactory {
     // referenced = from, referencing = to
     const from = `${compound.containerId}/${JSON.stringify(compound.refDocType)}`;
     const to = `${compound.containerId}/${JSON.stringify(compound.refDocType)}/compound`;
-    const edgeId = `${from} -> ${JSON.stringify(constraint.compoundProperties)} -> ${to}`;
+    //const edgeId = `${from} -> ${JSON.stringify(constraint.compoundProperties)} -> ${to}`;
 
-    this.#constraintGraph.addVertex({ id: from });
-    this.#vertexProperties.set(from, compound);
-
-    this.#constraintGraph.addVertex({ id: to });
-    this.#vertexProperties.set(to, compound);
-
-    // Check that the edge does not already exist
-    if (this.#edgeProperties.has(edgeId)) {
-      throw new Error(`Edge ${edgeId} already exists`);
-    }
-    this.#constraintGraph.addEdge({ from, to });
-    this.#edgeProperties.set(edgeId, constraint);
+    this.#constraintsGraph.addVertices(
+      { id: from, vertex: compound },
+      { id: to, vertex: compound }
+    );
+    this.#constraintsGraph.addEdges({ from, to, edge: constraint });
   }
 
   protected validatePartitionReference(partitionRef: PartitionReference): void {
@@ -367,19 +347,13 @@ export class ConstraintFactory {
 
     // referenced = from, referencing = to
     const from = `${referenced.containerId}/${JSON.stringify(referenced.refDocType)}`;
-    this.#constraintGraph.addVertex({ id: from });
-    this.#vertexProperties.set(from, referenced);
-
     const to = `${referencing.containerId}/${JSON.stringify(referencing.partitionKeyProperties)}`;
-    this.#constraintGraph.addVertex({ id: to });
-    this.#vertexProperties.set(to, referencing);
+    //const edgeId = `${from} -> ${JSON.stringify(constraint.refProperties)} -> ${to}`;
 
-    // Check that the edge does not already exist
-    const edgeId = `${from} -> ${JSON.stringify(constraint.refProperties)} -> ${to}`;
-    if (this.#edgeProperties.has(edgeId)) {
-      throw new Error(`Edge ${edgeId} already exists`);
-    }
-    this.#constraintGraph.addEdge({ from, to });
-    this.#edgeProperties.set(edgeId, constraint);
+    this.#constraintsGraph.addVertices(
+      { id: from, vertex: referenced },
+      { id: to, vertex: referencing }
+    );
+    this.#constraintsGraph.addEdges({ from, to, edge: constraint });
   }
 }
