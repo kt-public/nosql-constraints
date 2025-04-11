@@ -44,10 +44,6 @@
     ".": {
       "import": "./dist/esm/index.js",
       "require": "./dist/cjs/index.js"
-    },
-    "./digraph": {
-      "import": "./dist/esm/digraph/index.js",
-      "require": "./dist/cjs/digraph/index.js"
     }
   },
   "devDependencies": {
@@ -55,6 +51,7 @@
     "@eslint/compat": "^1.2.7",
     "@types/lodash": "^4.17.16",
     "@types/node": "^22.13.10",
+    "@vitest/coverage-istanbul": "^3.1.1",
     "@vitest/coverage-v8": "^3.1.1",
     "eslint": "^9.22.0",
     "eslint-config-prettier": "^10.1.1",
@@ -69,7 +66,9 @@
     "zod": "^3.24.2"
   },
   "dependencies": {
-    "lodash": "^4.17.21"
+    "lodash": "^4.17.21",
+    "typesafe-property-path": "^0.0.1",
+    "ya-digraph-js": "^0.1.1"
   },
   "engines": {
     "node": ">=20.0.0"

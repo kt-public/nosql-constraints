@@ -1,1 +1,2 @@
-export { zod } from './zod.js';
+export * from './schema.js';
+export * from './zod.js';
