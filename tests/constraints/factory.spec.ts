@@ -75,7 +75,7 @@ describe('Constraint factory', () => {
       factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
       factory.addDocument2DocumentConstraint(
         { containerId: 'container2', refDocType: { type: 'C2A' } },
-        { refProperties: { buddyId: 'id' } },
+        { refProperties: { buddyId: 'id' }, cascadeDelete: true },
         { containerId: 'container1', refDocType: { type: 'C1A' } }
       );
     });
@@ -113,7 +113,7 @@ describe('Constraint factory', () => {
       factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
       factory.addDocument2DocumentConstraint(
         { containerId: 'container2', refDocType: { type: 'C2B' } },
-        { refProperties: { 'buddyIds[]': 'id' } },
+        { refProperties: { 'buddyIds[]': 'id' }, cascadeDelete: true },
         { containerId: 'container1', refDocType: { type: 'C1A' } }
       );
     });
@@ -123,7 +123,7 @@ describe('Constraint factory', () => {
       factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
       factory.addDocument2DocumentConstraint(
         { containerId: 'container2', refDocType: { type: 'C2C' } },
-        { refProperties: { 'parents[].parentId': 'id' } },
+        { refProperties: { 'parents[].parentId': 'id' }, cascadeDelete: true },
         { containerId: 'container1', refDocType: { type: 'C1A' } }
       );
     });
@@ -135,7 +135,7 @@ describe('Constraint factory', () => {
       factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
       factory.addPartition2DocumentConstraint(
         { containerId: 'container2', partitionKeyProperties: ['somePartitionKey.someBuddyId'] },
-        { refProperties: { 'somePartitionKey.someBuddyId': 'id' } },
+        { refProperties: { 'somePartitionKey.someBuddyId': 'id' }, cascadeDelete: true },
         { containerId: 'container1', refDocType: { type: 'C1A' } }
       );
     });
@@ -163,7 +163,7 @@ describe('Constraint factory', () => {
       factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
       factory.addDocumentCompoundConstraint(
         { containerId: 'container2', refDocType: { type: 'C2C' } },
-        { compoundProperties: ['compoundId'] }
+        { compoundProperties: ['compoundId'], cascadeDelete: true }
       );
     });
     it('should fail to add compound: container2/doc3.compoundId -> container2/doc3.compoundId', ({
