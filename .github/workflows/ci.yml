@@ -45,7 +45,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
-      - run: npm run coverage
+      - run: npm run test
   codeql:
     uses: ./.github/workflows/codeql.yml
     secrets: inherit
