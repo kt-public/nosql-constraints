@@ -113,7 +113,17 @@ describe('Constraint factory', () => {
       factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
       factory.addDocument2DocumentConstraint(
         { containerId: 'container2', refDocType: { type: 'C2B' } },
-        { refProperties: { 'buddyIds.[]': 'id' } },
+        { refProperties: { 'buddyIds[]': 'id' } },
+        { containerId: 'container1', refDocType: { type: 'C1A' } }
+      );
+    });
+    it('should be able to add: container2/doc3.parents[].parentId -> container1/doc1.id', () => {
+      const factory = new ConstraintFactory();
+      factory.addDocumentSchema('container1', zod(testCaseSchemas.container1));
+      factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
+      factory.addDocument2DocumentConstraint(
+        { containerId: 'container2', refDocType: { type: 'C2C' } },
+        { refProperties: { 'parents[].parentId': 'id' } },
         { containerId: 'container1', refDocType: { type: 'C1A' } }
       );
     });
