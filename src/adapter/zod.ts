@@ -17,7 +17,7 @@ export function zod(schema: ZodSchema): DocumentSchemaAdapter {
 }
 
 class ZodAdapter implements DocumentSchemaAdapter {
-  #schema: ZodSchema;
+  readonly #schema: ZodSchema;
   constructor(schema: ZodSchema) {
     this.#schema = schema;
   }
@@ -31,14 +31,7 @@ function extractChunks(
   propertyPath: string | undefined,
   schema: ZodSchema
 ): [string | undefined, DocumentSchemaChunk[]] {
-  if (schema instanceof ZodUnion) {
-    return [
-      propertyKey,
-      schema.options
-        .map((option: ZodSchema) => extractChunks(propertyKey, propertyPath, option)[1])
-        .flat()
-    ];
-  } else if (schema instanceof ZodDiscriminatedUnion) {
+  if (schema instanceof ZodUnion || schema instanceof ZodDiscriminatedUnion) {
     return [
       propertyKey,
       schema.options
