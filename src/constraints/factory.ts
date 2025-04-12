@@ -34,8 +34,8 @@ type DocCompoundConstraint = Edge & {
 };
 
 export class ConstraintFactory {
-  #containerSchemaAdapters = new Map<string, DocumentSchemaAdapter[]>();
-  #containerSchemaChunks = new Map<string, DocumentSchemaChunk[]>();
+  readonly #containerSchemaAdapters = new Map<string, DocumentSchemaAdapter[]>();
+  readonly #containerSchemaChunks = new Map<string, DocumentSchemaChunk[]>();
   readonly #constraintsGraph = new DiGraph<Vertex, Edge>();
 
   public addDocumentSchema(containerId: string, schema: DocumentSchemaAdapter): void {
