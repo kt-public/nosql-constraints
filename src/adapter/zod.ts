@@ -16,7 +16,7 @@ export function zod(schema: ZodSchema): DocumentSchemaAdapter {
   return new ZodAdapter(schema);
 }
 
-class ZodAdapter implements DocumentSchemaAdapter {
+export class ZodAdapter implements DocumentSchemaAdapter {
   #schema: ZodSchema;
   constructor(schema: ZodSchema) {
     this.#schema = schema;

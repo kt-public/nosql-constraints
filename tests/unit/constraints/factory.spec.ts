@@ -1,7 +1,6 @@
 import { describe, it } from 'vitest';
 import { z } from 'zod';
-import { zod } from '../../../src';
-import { ConstraintFactory } from '../../../src/constraints/factory';
+import { ConstraintFactory, zod } from '../../../src/index';
 
 const container1DocSchema1 = z.object({
   id: z.string(),

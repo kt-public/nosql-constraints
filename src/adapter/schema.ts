@@ -1,28 +1,3 @@
-/**
- * Examples of how referencing properties could be named
- * {
- *   portfolioId: '123',
- * },
- * {
- *   accountIds: ['123', '456'],
- * },
- * {
- *   account: {
- *     accountId: '123',
- *   },
- * }
- * {
- *   accounts: [
- *     {
- *       accountId: '123',
- *     },
- *     {
- *       accountId: '456',
- *     }
- *   ]
- * },
- */
-
 type DocumentSchemaChunkType =
   | 'object'
   | 'array'
