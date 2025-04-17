@@ -1,5 +1,30 @@
 # nosql-constraints
 
+## 0.1.0
+
+### Minor Changes
+
+- 8dd81fb: Switch to ESM completely
+
+### Patch Changes
+
+- b280ae2: Add doc-to-doc, partition-to-doc, compound-doc constraints
+- 1b02175: dependabot: update @changesets/cli
+- d2a35b9: dependabot: update @changesets/cli
+- 463e67d: dependabot: update @changesets/cli
+- d32d51e: dependabot: update @types/node
+- f981342: dependabot: update eslint-config-prettier
+- d32d51e: dependabot: update eslint-config-prettier
+- f981342: dependabot: update publint
+- d32d51e: dependabot: update publint
+- 1b02175: dependabot: update publint
+- a124d3e: dependabot: update tsc-alias
+- f981342: dependabot: update tsc-alias
+- d32d51e: dependabot: update tsc-alias
+- 2d37b60: dependabot: update typescript-eslint
+- 1b02175: dependabot: update typescript-eslint
+- 463e67d: dependabot: update zod
+
 ## 0.0.8
 
 ### Patch Changes
