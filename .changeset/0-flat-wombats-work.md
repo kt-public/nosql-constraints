@@ -1,5 +1,5 @@
 ---
-'nosql-constraints': minor
+'nosql-constraints': patch
 ---
 
 Switch to ESM completely
