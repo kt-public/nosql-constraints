@@ -10,10 +10,10 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,
-    "sourceMap": true,
     "strict": true,
     "outDir": "./dist",
     "declaration": true,
+    "sourceMap": true,
     "declarationMap": true
   },
   "include": ["src"],
