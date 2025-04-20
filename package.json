@@ -18,14 +18,14 @@
     "url": "git+https://github.com/kt-public/nosql-constraints.git"
   },
   "scripts": {
-    "build": "rimraf ./dist && tsc --project tsconfig.json && tsc-alias --project tsconfig.json && npm run prepack",
-    "clean": "rimraf ./dist ./coverage",
-    "prepare": "echo ''",
+    "build": "rimraf ./dist && tsc --project tsconfig.json && npm run prepack",
+    "build:release": "rimraf ./dist && tsc --project tsconfig-release.json && npm run prepack",
+    "prepare": "echo 'This is called after installing the package locally.'",
     "prepack": "publint",
     "format": "prettier --write .",
     "lint": "prettier --check . && eslint .",
     "check": "tsc --skipLibCheck",
-    "test": "vitest run",
+    "test": "vitest run && npm run benchmark",
     "coverage": "vitest run --coverage",
     "changeset:version": "changeset version && git add --all",
     "changeset:publish": "changeset publish"
@@ -57,8 +57,6 @@
     "prettier": "^3.5.3",
     "publint": "^0.3.9",
     "rimraf": "^6.0.1",
-    "tsc-alias": "^1.8.11",
-    "tsconfig-to-dual-package": "^1.2.0",
     "typescript": "^5.8.2",
     "typescript-eslint": "^8.26.1",
     "vitest": "^3.0.8",
