@@ -25,7 +25,7 @@
     "format": "prettier --write .",
     "lint": "prettier --check . && eslint .",
     "check": "tsc --skipLibCheck",
-    "test": "vitest run && npm run benchmark",
+    "test": "vitest run",
     "coverage": "vitest run --coverage",
     "changeset:version": "changeset version && git add --all",
     "changeset:publish": "changeset publish"
