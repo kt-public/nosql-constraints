@@ -115,6 +115,14 @@ describe('Constraint factory', () => {
           { containerId: 'container1', refDocType: { type: 'C1X' } }
         );
       }).toThrowError('Missing schema for container container1 and refDocType {"type":"C1X"}');
+      expect(() => {
+        factory.addDocument2DocumentConstraint<Container2Doc1, Container1Doc1>(
+          { containerId: 'container2', refDocType: { type: 'C2A' } },
+          { refProperties: { buddyId: 'id' }, cascadeDelete: true },
+          // @ts-expect-error: Testing invalid refDocType to ensure error handling
+          { containerId: 'container1', refDocType: { typeZ: 'C1X' } }
+        );
+      }).toThrowError('Missing schema for container container1 and refDocType {"typeZ":"C1X"}');
     });
     it('should be able to add: container2/doc1.buddyId -> container1/doc1.id', () => {
       const factory = new ConstraintFactory();
