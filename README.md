@@ -9,7 +9,7 @@
 
 Helpers to manage constrants (i.e. cascade delete) in a NoSQL database
 
-Still in progress
+**Still in progress**
 
 # Supported schema packages
 
