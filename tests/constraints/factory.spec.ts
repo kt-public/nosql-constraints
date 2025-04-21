@@ -77,7 +77,30 @@ const testCaseSchemas = {
 };
 
 describe('Constraint factory', () => {
+  describe('Document schema', () => {
+    it('should be able to add container1 schema', () => {
+      const factory = new ConstraintFactory();
+      factory.addDocumentSchema('container1', zod(container1Doc1Schema));
+      factory.addDocumentSchema('container1', zod(container1Doc2Schema));
+    });
+    it('should be able to add container2 schema', () => {
+      const factory = new ConstraintFactory();
+      factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
+    });
+  });
   describe('Document 2 Document constraint', () => {
+    it('should fail to add: container2/doc1.buddyId -> container1/doc1.id - without schema', ({
+      expect
+    }) => {
+      const factory = new ConstraintFactory();
+      expect(() => {
+        factory.addDocument2DocumentConstraint<Container2Doc1, Container1Doc1>(
+          { containerId: 'container2', refDocType: { type: 'C2A' } },
+          { refProperties: { buddyId: 'id' }, cascadeDelete: true },
+          { containerId: 'container1', refDocType: { type: 'C1A' } }
+        );
+      }).toThrowError('Missing schema for container container2');
+    });
     it('should be able to add: container2/doc1.buddyId -> container1/doc1.id', () => {
       const factory = new ConstraintFactory();
       factory.addDocumentSchema('container1', zod(testCaseSchemas.container1));
