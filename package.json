@@ -25,7 +25,7 @@
     "format": "prettier --write .",
     "lint": "prettier --check . && eslint .",
     "check": "tsc --skipLibCheck",
-    "test": "vitest run",
+    "test": "tsc --project tsconfig-test.json --skipLibCheck && vitest run",
     "coverage": "vitest run --coverage",
     "changeset:version": "changeset version && git add --all",
     "changeset:publish": "changeset publish"
@@ -64,7 +64,7 @@
   },
   "dependencies": {
     "lodash": "^4.17.21",
-    "typesafe-property-path": "^0.1.0",
+    "typesafe-utilities": "^0.x",
     "ya-digraph-js": "^0.2.0"
   },
   "engines": {

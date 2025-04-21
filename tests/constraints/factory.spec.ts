@@ -2,13 +2,14 @@ import { describe, it } from 'vitest';
 import { z } from 'zod';
 import { ConstraintFactory, zod } from '../../src/index';
 
-const container1DocSchema1 = z.object({
+const container1Doc1Schema = z.object({
   id: z.string(),
   type: z.literal('C1A'),
   name: z.string(),
   age: z.number()
 });
-const container1DocSchema2 = z.object({
+type Container1Doc1 = z.infer<typeof container1Doc1Schema>;
+const container1Doc2Schema = z.object({
   id: z.string(),
   type: z.literal('C1B'),
   firstname: z.string(),
@@ -16,11 +17,15 @@ const container1DocSchema2 = z.object({
   email: z.string(),
   childrenRefIds: z.array(z.string())
 });
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+type Container1Doc2 = z.infer<typeof container1Doc2Schema>;
 const container1DocSchema = z.discriminatedUnion('type', [
-  container1DocSchema1,
-  container1DocSchema2
+  container1Doc1Schema,
+  container1Doc2Schema
 ]);
-const container2DocSchema1 = z.object({
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+type Container1Doc = z.infer<typeof container1DocSchema>;
+const container2Doc1Schema = z.object({
   id: z.string(),
   type: z.literal('C2A'),
   title: z.string(),
@@ -30,7 +35,8 @@ const container2DocSchema1 = z.object({
     someBuddyId: z.string()
   })
 });
-const container2DocSchema2 = z.object({
+type Container2Doc1 = z.infer<typeof container2Doc1Schema>;
+const container2Doc2Schema = z.object({
   id: z.string(),
   type: z.literal('C2B'),
   title: z.string(),
@@ -40,7 +46,8 @@ const container2DocSchema2 = z.object({
     someBuddyId: z.string()
   })
 });
-const container2DocSchema3 = z.object({
+type Container2Doc2 = z.infer<typeof container2Doc2Schema>;
+const container2Doc3Schema = z.object({
   id: z.string(),
   type: z.literal('C2C'),
   title: z.string(),
@@ -56,11 +63,13 @@ const container2DocSchema3 = z.object({
   }),
   compoundId: z.string()
 });
+type Container2Doc3 = z.infer<typeof container2Doc3Schema>;
 const container2DocSchema = z.discriminatedUnion('type', [
-  container2DocSchema1,
-  container2DocSchema2,
-  container2DocSchema3
+  container2Doc1Schema,
+  container2Doc2Schema,
+  container2Doc3Schema
 ]);
+type Container2Doc = z.infer<typeof container2DocSchema>;
 
 const testCaseSchemas = {
   container1: container1DocSchema,
@@ -73,7 +82,7 @@ describe('Constraint factory', () => {
       const factory = new ConstraintFactory();
       factory.addDocumentSchema('container1', zod(testCaseSchemas.container1));
       factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
-      factory.addDocument2DocumentConstraint(
+      factory.addDocument2DocumentConstraint<Container2Doc1, Container1Doc1>(
         { containerId: 'container2', refDocType: { type: 'C2A' } },
         { refProperties: { buddyId: 'id' }, cascadeDelete: true },
         { containerId: 'container1', refDocType: { type: 'C1A' } }
@@ -84,8 +93,9 @@ describe('Constraint factory', () => {
       factory.addDocumentSchema('container1', zod(testCaseSchemas.container1));
       factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
       expect(() => {
-        factory.addDocument2DocumentConstraint(
+        factory.addDocument2DocumentConstraint<Container2Doc1, Container1Doc1>(
           { containerId: 'container2', refDocType: { type: 'C2A' } },
+          // @ts-expect-error: Testing invalid property name to ensure error handling
           { refProperties: { buddyIdx: 'id' } },
           { containerId: 'container1', refDocType: { type: 'C1A' } }
         );
@@ -98,8 +108,9 @@ describe('Constraint factory', () => {
       factory.addDocumentSchema('container1', zod(testCaseSchemas.container1));
       factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
       expect(() => {
-        factory.addDocument2DocumentConstraint(
+        factory.addDocument2DocumentConstraint<Container2Doc1, Container1Doc1>(
           { containerId: 'container2', refDocType: { type: 'C2A' } },
+          // @ts-expect-error: Testing invalid property name to ensure error handling
           { refProperties: { buddyId: 'idx' } },
           { containerId: 'container1', refDocType: { type: 'C1A' } }
         );
@@ -111,7 +122,7 @@ describe('Constraint factory', () => {
       const factory = new ConstraintFactory();
       factory.addDocumentSchema('container1', zod(testCaseSchemas.container1));
       factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
-      factory.addDocument2DocumentConstraint(
+      factory.addDocument2DocumentConstraint<Container2Doc2, Container1Doc1>(
         { containerId: 'container2', refDocType: { type: 'C2B' } },
         { refProperties: { 'buddyIds[]': 'id' }, cascadeDelete: true },
         { containerId: 'container1', refDocType: { type: 'C1A' } }
@@ -121,7 +132,7 @@ describe('Constraint factory', () => {
       const factory = new ConstraintFactory();
       factory.addDocumentSchema('container1', zod(testCaseSchemas.container1));
       factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
-      factory.addDocument2DocumentConstraint(
+      factory.addDocument2DocumentConstraint<Container2Doc3, Container1Doc1>(
         { containerId: 'container2', refDocType: { type: 'C2C' } },
         { refProperties: { 'parents[].parentId': 'id' }, cascadeDelete: true },
         { containerId: 'container1', refDocType: { type: 'C1A' } }
@@ -133,7 +144,7 @@ describe('Constraint factory', () => {
       const factory = new ConstraintFactory();
       factory.addDocumentSchema('container1', zod(testCaseSchemas.container1));
       factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
-      factory.addPartition2DocumentConstraint(
+      factory.addPartition2DocumentConstraint<Container2Doc, Container1Doc1>(
         { containerId: 'container2', partitionKeyProperties: ['somePartitionKey.someBuddyId'] },
         { refProperties: { 'somePartitionKey.someBuddyId': 'id' }, cascadeDelete: true },
         { containerId: 'container1', refDocType: { type: 'C1A' } }
@@ -146,7 +157,7 @@ describe('Constraint factory', () => {
       factory.addDocumentSchema('container1', zod(testCaseSchemas.container1));
       factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
       expect(() => {
-        factory.addPartition2DocumentConstraint(
+        factory.addPartition2DocumentConstraint<Container2Doc, Container1Doc1>(
           { containerId: 'container2', partitionKeyProperties: ['somePartitionKey.someBuddyId'] },
           { refProperties: { somePartitionKey: 'id' } },
           { containerId: 'container1', refDocType: { type: 'C1A' } }
@@ -161,7 +172,7 @@ describe('Constraint factory', () => {
       const factory = new ConstraintFactory();
       factory.addDocumentSchema('container1', zod(testCaseSchemas.container1));
       factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
-      factory.addDocumentCompoundConstraint(
+      factory.addDocumentCompoundConstraint<Container2Doc3>(
         { containerId: 'container2', refDocType: { type: 'C2C' } },
         { compoundProperties: ['compoundId'], cascadeDelete: true }
       );
@@ -173,8 +184,9 @@ describe('Constraint factory', () => {
       factory.addDocumentSchema('container1', zod(testCaseSchemas.container1));
       factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
       expect(() => {
-        factory.addDocumentCompoundConstraint(
+        factory.addDocumentCompoundConstraint<Container2Doc3>(
           { containerId: 'container2', refDocType: { type: 'C2C' } },
+          // @ts-expect-error: Testing invalid property name to ensure error handling
           { compoundProperties: ['compoundId', 'compoundIdx'] }
         );
       }).toThrowError(
