@@ -1,5 +1,38 @@
 # nosql-constraints
 
+## 0.1.0
+
+### Minor Changes
+
+- 100f96a: Added constraints build & query, first release ready
+- 7e96a00: breaking: rename class ConstraintFactory -> ConstraintsFactory
+
+### Patch Changes
+
+- 5c36f54: Add validation of constraints
+- 8732e5b: Switch to ESM completely
+- 8732e5b: Add doc-to-doc, partition-to-doc, compound-doc constraints
+- 8732e5b: Remove sourcemaps from published distribution
+- b82f0b7: dependabot: directory '/', update eslint
+- b82f0b7: dependabot: directory '/', update ya-digraph-js
+- 29da3dd: dependabot: directory '/', update eslint
+- 29da3dd: dependabot: directory '/', update typescript-eslint
+- 1b02175: dependabot: update @changesets/cli
+- d2a35b9: dependabot: update @changesets/cli
+- 463e67d: dependabot: update @changesets/cli
+- d32d51e: dependabot: update @types/node
+- f981342: dependabot: update eslint-config-prettier
+- d32d51e: dependabot: update eslint-config-prettier
+- f981342: dependabot: update publint
+- d32d51e: dependabot: update publint
+- 1b02175: dependabot: update publint
+- a124d3e: dependabot: update tsc-alias
+- f981342: dependabot: update tsc-alias
+- d32d51e: dependabot: update tsc-alias
+- 2d37b60: dependabot: update typescript-eslint
+- 1b02175: dependabot: update typescript-eslint
+- 463e67d: dependabot: update zod
+
 ## 0.0.8
 
 ### Patch Changes
