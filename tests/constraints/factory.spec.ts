@@ -78,14 +78,18 @@ const testCaseSchemas = {
 
 describe('Constraint factory', () => {
   describe('Document schema', () => {
-    it('should be able to add container1 schema', () => {
+    it('should be able to add container1 schema', ({ expect }) => {
       const factory = new ConstraintFactory();
       factory.addDocumentSchema('container1', zod(container1Doc1Schema));
       factory.addDocumentSchema('container1', zod(container1Doc2Schema));
+      expect([...factory.constraintsGraph.getVertexIds()].length).toBe(0);
+      expect([...factory.constraintsGraph.getEdgeIds()].length).toBe(0);
     });
-    it('should be able to add container2 schema', () => {
+    it('should be able to add container2 schema', ({ expect }) => {
       const factory = new ConstraintFactory();
       factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
+      expect([...factory.constraintsGraph.getVertexIds()].length).toBe(0);
+      expect([...factory.constraintsGraph.getEdgeIds()].length).toBe(0);
     });
   });
   describe('Document 2 Document constraint', () => {
@@ -124,7 +128,7 @@ describe('Constraint factory', () => {
         );
       }).toThrowError('Missing schema for container container1 and refDocType {"typeZ":"C1X"}');
     });
-    it('should be able to add: container2/doc1.buddyId -> container1/doc1.id', () => {
+    it('should be able to add: container2/doc1.buddyId -> container1/doc1.id', ({ expect }) => {
       const factory = new ConstraintFactory();
       factory.addDocumentSchema('container1', zod(testCaseSchemas.container1));
       factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
@@ -133,6 +137,8 @@ describe('Constraint factory', () => {
         { refProperties: { buddyId: 'id' }, cascadeDelete: true },
         { containerId: 'container1', refDocType: { type: 'C1A' } }
       );
+      expect([...factory.constraintsGraph.getVertexIds()].length).toBe(2);
+      expect([...factory.constraintsGraph.getEdgeIds()].length).toBe(1);
     });
     it('should fail to add: container2/doc1.buddyId -> container1/doc1.id', ({ expect }) => {
       const factory = new ConstraintFactory();
@@ -164,7 +170,7 @@ describe('Constraint factory', () => {
         'Failed to validate referenced constraint container1/{"type":"C1A"}/idx: property not found'
       );
     });
-    it('should be able to add: container2/doc2.buddyIds -> container1/doc1.id', () => {
+    it('should be able to add: container2/doc2.buddyIds -> container1/doc1.id', ({ expect }) => {
       const factory = new ConstraintFactory();
       factory.addDocumentSchema('container1', zod(testCaseSchemas.container1));
       factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
@@ -173,8 +179,12 @@ describe('Constraint factory', () => {
         { refProperties: { 'buddyIds[]': 'id' }, cascadeDelete: true },
         { containerId: 'container1', refDocType: { type: 'C1A' } }
       );
+      expect([...factory.constraintsGraph.getVertexIds()].length).toBe(2);
+      expect([...factory.constraintsGraph.getEdgeIds()].length).toBe(1);
     });
-    it('should be able to add: container2/doc3.parents[].parentId -> container1/doc1.id', () => {
+    it('should be able to add: container2/doc3.parents[].parentId -> container1/doc1.id', ({
+      expect
+    }) => {
       const factory = new ConstraintFactory();
       factory.addDocumentSchema('container1', zod(testCaseSchemas.container1));
       factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
@@ -183,8 +193,12 @@ describe('Constraint factory', () => {
         { refProperties: { 'parents[].parentId': 'id' }, cascadeDelete: true },
         { containerId: 'container1', refDocType: { type: 'C1A' } }
       );
+      expect([...factory.constraintsGraph.getVertexIds()].length).toBe(2);
+      expect([...factory.constraintsGraph.getEdgeIds()].length).toBe(1);
     });
-    it('should be able to add: container2/doc3.parents[].parentId -> container1/doc1.id -> funny refDocType', () => {
+    it('should be able to add: container2/doc3.parents[].parentId -> container1/doc1.id -> funny refDocType', ({
+      expect
+    }) => {
       const factory = new ConstraintFactory();
       factory.addDocumentSchema('container1', zod(testCaseSchemas.container1));
       factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
@@ -196,10 +210,14 @@ describe('Constraint factory', () => {
         { refProperties: { 'buddyIds[]': 'id' }, cascadeDelete: true },
         { containerId: 'container1', refDocType: { type: 'C1A' } }
       );
+      expect([...factory.constraintsGraph.getVertexIds()].length).toBe(2);
+      expect([...factory.constraintsGraph.getEdgeIds()].length).toBe(1);
     });
   });
   describe('Partition 2 Document constraint', () => {
-    it('should be able to add: container2/["somePartitionKey.someBuddyId"] -> container1/doc1.id', () => {
+    it('should be able to add: container2/["somePartitionKey.someBuddyId"] -> container1/doc1.id', ({
+      expect
+    }) => {
       const factory = new ConstraintFactory();
       factory.addDocumentSchema('container1', zod(testCaseSchemas.container1));
       factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
@@ -208,6 +226,8 @@ describe('Constraint factory', () => {
         { refProperties: { 'somePartitionKey.someBuddyId': 'id' }, cascadeDelete: true },
         { containerId: 'container1', refDocType: { type: 'C1A' } }
       );
+      expect([...factory.constraintsGraph.getVertexIds()].length).toBe(2);
+      expect([...factory.constraintsGraph.getEdgeIds()].length).toBe(1);
     });
     it('should fail to add: container2/["somePartitionKey.someBuddyId"] -> container1/doc1.id', ({
       expect
@@ -227,7 +247,9 @@ describe('Constraint factory', () => {
     });
   });
   describe('Document compound constraint', () => {
-    it('should be able to add compound: container2/doc3.compoundId -> container2/doc3.compoundId', () => {
+    it('should be able to add compound: container2/doc3.compoundId -> container2/doc3.compoundId', ({
+      expect
+    }) => {
       const factory = new ConstraintFactory();
       factory.addDocumentSchema('container1', zod(testCaseSchemas.container1));
       factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
@@ -235,6 +257,8 @@ describe('Constraint factory', () => {
         { containerId: 'container2', refDocType: { type: 'C2C' } },
         { compoundProperties: ['compoundId'], cascadeDelete: true }
       );
+      expect([...factory.constraintsGraph.getVertexIds()].length).toBe(2);
+      expect([...factory.constraintsGraph.getEdgeIds()].length).toBe(1);
     });
     it('should fail to add compound: container2/doc3.compoundId -> container2/doc3.compoundId', ({
       expect
