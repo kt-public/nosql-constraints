@@ -79,52 +79,44 @@ export class ConstraintFactory {
       currentChunks: DocumentSchemaChunk[],
       currentRefDocType: Record<string, unknown>
     ): DocumentSchemaChunk[] => {
-      const matchedChunks: DocumentSchemaChunk[] = [];
-
-      for (const chunk of currentChunks) {
-        let isMatch = true;
-
-        for (const [refProperty, refValue] of Object.entries(currentRefDocType)) {
-          const propertyChunks = chunk.properties?.[refProperty];
-          if (!propertyChunks) {
-            isMatch = false;
-            break;
+      const isScalarMatch = (propertyChunks: DocumentSchemaChunk[], refValue: unknown): boolean =>
+        propertyChunks.some((propertyChunk) => {
+          if (propertyChunk.type === 'literal') {
+            return propertyChunk.value === refValue;
+          } else if (propertyChunk.type === typeof refValue) {
+            return true;
           }
+          return false;
+        });
 
-          if (typeof refValue === 'object' && refValue !== null) {
-            // Drill down recursively for nested objects
-            const nestedMatchedChunks = matchProperties(
-              propertyChunks,
-              refValue as Record<string, unknown>
-            );
-            if (nestedMatchedChunks.length === 0) {
-              isMatch = false;
-              break;
-            }
-          } else {
-            // Check scalar values
-            const scalarMatch = propertyChunks.some((propertyChunk) => {
-              if (propertyChunk.type === 'literal') {
-                return propertyChunk.value === refValue;
-              } else if (propertyChunk.type === typeof refValue) {
-                return true;
-              }
-              return false;
-            });
-
-            if (!scalarMatch) {
-              isMatch = false;
-              break;
-            }
-          }
+      const isPropertyMatch = (
+        chunk: DocumentSchemaChunk,
+        refProperty: string,
+        refValue: unknown
+      ): boolean => {
+        const propertyChunks = chunk.properties?.[refProperty];
+        if (!propertyChunks) {
+          return false;
         }
 
-        if (isMatch) {
-          matchedChunks.push(chunk);
+        if (typeof refValue === 'object' && refValue !== null) {
+          // Drill down recursively for nested objects
+          const nestedMatchedChunks = matchProperties(
+            propertyChunks,
+            refValue as Record<string, unknown>
+          );
+          return nestedMatchedChunks.length > 0;
         }
-      }
 
-      return matchedChunks;
+        // Check scalar values
+        return isScalarMatch(propertyChunks, refValue);
+      };
+
+      return currentChunks.filter((chunk) =>
+        Object.entries(currentRefDocType).every(([refProperty, refValue]) =>
+          isPropertyMatch(chunk, refProperty, refValue)
+        )
+      );
     };
 
     // Start matching from the top-level chunks
