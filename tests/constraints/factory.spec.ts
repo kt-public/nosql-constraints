@@ -288,7 +288,7 @@ describe('Constraint factory', () => {
         { refProperties: { buddyId: 'id' }, cascadeDelete: true },
         { containerId: 'container1', refDocType: { type: 'C1A' } }
       );
-      expect(factory.validate());
+      expect(factory.validate()).toBeUndefined();
     });
     it('should fail to add self cycle: container2/doc1.buddyId -> container2/doc1.buddyId', ({
       expect
@@ -351,7 +351,7 @@ describe('Constraint factory', () => {
         { refProperties: { id: 'id' }, cascadeDelete: true },
         { containerId: 'container2', refDocType: { type: 'C2B' } }
       );
-      expect(factory.validate());
+      expect(factory.validate()).toBeUndefined();
     });
     it('should fail to validate cascade delete: container2/doc1.buddyId -> container1/doc1.id -> container1/doc2.id -> container2/doc2.id', ({
       expect
