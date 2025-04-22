@@ -184,6 +184,19 @@ describe('Constraint factory', () => {
         { containerId: 'container1', refDocType: { type: 'C1A' } }
       );
     });
+    it('should be able to add: container2/doc3.parents[].parentId -> container1/doc1.id -> funny refDocType', () => {
+      const factory = new ConstraintFactory();
+      factory.addDocumentSchema('container1', zod(testCaseSchemas.container1));
+      factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
+      factory.addDocument2DocumentConstraint<Container2Doc2, Container1Doc1>(
+        {
+          containerId: 'container2',
+          refDocType: { somePartitionKey: { someBuddyId: 'whateverId' } }
+        },
+        { refProperties: { 'buddyIds[]': 'id' }, cascadeDelete: true },
+        { containerId: 'container1', refDocType: { type: 'C1A' } }
+      );
+    });
   });
   describe('Partition 2 Document constraint', () => {
     it('should be able to add: container2/["somePartitionKey.someBuddyId"] -> container1/doc1.id', () => {
