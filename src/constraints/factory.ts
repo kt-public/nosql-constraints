@@ -1,41 +1,52 @@
 import _ from 'lodash';
+import stringify from 'safe-stable-stringify';
 import { type PropertyPaths, type UnknownStringRecord } from 'typesafe-utilities';
-import { CyclesDFS, DiGraph, EdgeId, GraphPaths } from 'ya-digraph-js';
+import { CyclesDFS, DiGraph, EdgeId, GraphPaths, IDiGraph } from 'ya-digraph-js';
 import { DocumentSchemaAdapter, DocumentSchemaChunk } from '../adapter/schema';
 import { Constraints } from './constraints';
-import { type Edge, type RefDocType, type Vertex } from './types';
+import {
+  ConstraintEdge,
+  ConstraintPathElement,
+  ConstraintVertexWithId,
+  Doc2CompoundConstraint,
+  Doc2DocConstraint,
+  DocumentReference,
+  Partition2DocConstraint,
+  PartitionReference,
+  type ConstraintVertex
+} from './types';
 
-type ContainerReference = {
-  containerId: string;
-};
-// Constraint document -> document reference
-type DocumentReference<TDoc extends UnknownStringRecord> = ContainerReference & {
-  refDocType?: RefDocType<TDoc>;
-};
-type Doc2DocConstraint<
+type _ConstraintVertex = ConstraintVertex<UnknownStringRecord>;
+type _ConstraintVertexWithId = ConstraintVertexWithId<UnknownStringRecord>;
+type _ConstraintEdge = ConstraintEdge<UnknownStringRecord, UnknownStringRecord>;
+// type _ConstraintEdgeWithId = ConstraintEdge<UnknownStringRecord, UnknownStringRecord>;
+type _ConstraintPathElement = ConstraintPathElement<UnknownStringRecord, UnknownStringRecord>;
+
+// method helper types
+type AddDocumentReference<TDoc extends UnknownStringRecord> = Omit<DocumentReference<TDoc>, 'type'>;
+type AddDoc2DocConstraint<
   TReferencing extends UnknownStringRecord,
   TReferenced extends UnknownStringRecord
-> = Edge & {
-  refProperties: Partial<Record<PropertyPaths<TReferencing>, PropertyPaths<TReferenced>>>;
-};
-// Constraint document -> partition reference
-type PartitionReference<TDoc extends UnknownStringRecord> = ContainerReference & {
-  partitionKeyProperties: PropertyPaths<TDoc>[];
-};
-type PartitionReferenceConstraint<
+> = Omit<Doc2DocConstraint<TReferencing, TReferenced>, 'type'>;
+type AddPartitionReference<TDoc extends UnknownStringRecord> = Omit<
+  PartitionReference<TDoc>,
+  'type'
+>;
+type AddPartition2DocConstraint<
   TReferencing extends UnknownStringRecord,
   TReferenced extends UnknownStringRecord
-> = Doc2DocConstraint<TReferencing, TReferenced>;
-type DocCompoundConstraint<TDoc extends UnknownStringRecord> = Edge & {
-  compoundProperties: PropertyPaths<TDoc>[];
-};
+> = Omit<Partition2DocConstraint<TReferencing, TReferenced>, 'type'>;
+type AddDoc2CompoundConstraint<TDoc extends UnknownStringRecord> = Omit<
+  Doc2CompoundConstraint<TDoc>,
+  'type'
+>;
 
 export class ConstraintsFactory {
   readonly #containerSchemaAdapters = new Map<string, DocumentSchemaAdapter[]>();
   readonly #containerSchemaChunks = new Map<string, DocumentSchemaChunk[]>();
-  readonly #constraintsGraph = new DiGraph<Vertex, Edge>();
+  readonly #constraintsGraph = new DiGraph<_ConstraintVertex, _ConstraintEdge>();
 
-  get constraintsGraph(): DiGraph<Vertex, Edge> {
+  get constraintsGraph(): IDiGraph<_ConstraintVertex, _ConstraintEdge> {
     return this.#constraintsGraph;
   }
 
@@ -56,7 +67,7 @@ export class ConstraintsFactory {
   }
 
   private findDocumentSchemaChunks<TDoc extends UnknownStringRecord>(
-    docRef: DocumentReference<TDoc>
+    docRef: AddDocumentReference<TDoc>
   ): DocumentSchemaChunk[] {
     const { containerId, refDocType } = docRef;
     const chunks = this.#containerSchemaChunks.get(containerId);
@@ -121,7 +132,7 @@ export class ConstraintsFactory {
   }
 
   private findPartitionSchemaChunks<TDoc extends UnknownStringRecord>(
-    partitionRef: PartitionReference<TDoc>
+    partitionRef: AddPartitionReference<TDoc>
   ): DocumentSchemaChunk[] {
     const { containerId } = partitionRef;
     let currentChunks = this.#containerSchemaChunks.get(containerId);
@@ -144,13 +155,13 @@ export class ConstraintsFactory {
   }
 
   private validateDocumentReference<TDoc extends UnknownStringRecord>(
-    docRef: DocumentReference<TDoc>
+    docRef: AddDocumentReference<TDoc>
   ): void {
     // Check that vertex has schema
     const chunks = this.findDocumentSchemaChunks(docRef);
     if (!chunks || chunks.length === 0) {
       throw new Error(
-        `Missing schema for container ${docRef.containerId} and refDocType ${JSON.stringify(docRef.refDocType)}`
+        `Missing schema for container ${docRef.containerId} and refDocType ${stringify(docRef.refDocType)}`
       );
     }
   }
@@ -200,9 +211,9 @@ export class ConstraintsFactory {
     TReferencing extends UnknownStringRecord,
     TReferenced extends UnknownStringRecord
   >(
-    referencing: DocumentReference<TReferencing>,
-    constraint: Doc2DocConstraint<TReferencing, TReferenced>,
-    referenced: DocumentReference<TReferenced>
+    referencing: AddDocumentReference<TReferencing>,
+    constraint: AddDoc2DocConstraint<TReferencing, TReferenced>,
+    referenced: AddDocumentReference<TReferenced>
   ): void {
     // Check that all refProperties are present in the referencing schema
     // At least one chunk should have all refProperties
@@ -220,7 +231,7 @@ export class ConstraintsFactory {
       );
       if (!foundReferencingChunks || foundReferencingChunks.length === 0) {
         throw new Error(
-          `Failed to validate referencing constraint ${referencing.containerId}/${JSON.stringify(referencing.refDocType)}/${referencingProperty}: property not found`
+          `Failed to validate referencing constraint ${referencing.containerId}/${stringify(referencing.refDocType)}/${referencingProperty}: property not found`
         );
       }
       const foundReferencedChunks = this.findDocumentSchemaChunksForProperty(
@@ -229,7 +240,7 @@ export class ConstraintsFactory {
       );
       if (!foundReferencedChunks || foundReferencedChunks.length === 0) {
         throw new Error(
-          `Failed to validate referenced constraint ${referenced.containerId}/${JSON.stringify(referenced.refDocType)}/${referencedProperty}: property not found`
+          `Failed to validate referenced constraint ${referenced.containerId}/${stringify(referenced.refDocType)}/${referencedProperty}: property not found`
         );
       }
     }
@@ -239,9 +250,9 @@ export class ConstraintsFactory {
     TReferencing extends UnknownStringRecord,
     TReferenced extends UnknownStringRecord
   >(
-    referencing: DocumentReference<TReferencing>,
-    constraint: Doc2DocConstraint<TReferencing, TReferenced>,
-    referenced: DocumentReference<TReferenced>
+    referencing: AddDocumentReference<TReferencing>,
+    constraint: AddDoc2DocConstraint<TReferencing, TReferenced>,
+    referenced: AddDocumentReference<TReferenced>
   ): void {
     // Validate first
     this.validateDocumentReference(referencing);
@@ -249,19 +260,26 @@ export class ConstraintsFactory {
     this.validateDoc2DocConstraint(referencing, constraint, referenced);
 
     // referenced = from, referencing = to
-    const from = `${referenced.containerId}/${JSON.stringify(referenced.refDocType)}`;
-    const to = `${referencing.containerId}/${JSON.stringify(referencing.refDocType)}`;
-    const vertices = [
-      { id: from, vertex: referenced },
-      { id: to, vertex: referencing }
-    ].filter((v) => !this.#constraintsGraph.hasVertex(v.id));
+    const from = `${referenced.containerId}/${stringify(referenced.refDocType)}`;
+    const to = `${referencing.containerId}/${stringify(referencing.refDocType)}`;
+    const vfrom: _ConstraintVertexWithId = {
+      id: from,
+      vertex: { type: 'document', ...referenced }
+    };
+    const vto: _ConstraintVertexWithId = {
+      id: to,
+      vertex: { type: 'document', ...referencing }
+    };
+    const vertices: _ConstraintVertexWithId[] = [vfrom, vto].filter(
+      (v) => !this.#constraintsGraph.hasVertex(v.id)
+    );
     this.#constraintsGraph.addVertices(...vertices);
-    this.#constraintsGraph.addEdges({ from, to, edge: constraint });
+    this.#constraintsGraph.addEdges({ from, to, edge: { type: 'doc2doc', ...constraint } });
   }
 
   private validateDocCompoundConstraint<TDoc extends UnknownStringRecord>(
-    compound: DocumentReference<TDoc>,
-    constraint: DocCompoundConstraint<TDoc>
+    compound: AddDocumentReference<TDoc>,
+    constraint: AddDoc2CompoundConstraint<TDoc>
   ): void {
     // Check that all compoundProperties are all present in all document schema chunks
     const compoundChunks = this.findDocumentSchemaChunks(compound);
@@ -274,35 +292,41 @@ export class ConstraintsFactory {
     });
     if (!allValid) {
       throw new Error(
-        `Failed to validate compound constraint ${compound.containerId}/${JSON.stringify(
+        `Failed to validate compound constraint ${compound.containerId}/${stringify(
           compound.refDocType
         )}/${constraint.compoundProperties}: compound properties must be present in each of the referenced document schema chunks`
       );
     }
   }
 
-  public addDocumentCompoundConstraint<TDoc extends UnknownStringRecord>(
-    compound: DocumentReference<TDoc>,
-    constraint: DocCompoundConstraint<TDoc>
+  public addDocument2CompoundConstraint<TDoc extends UnknownStringRecord>(
+    compound: AddDocumentReference<TDoc>,
+    constraint: AddDoc2CompoundConstraint<TDoc>
   ): void {
     // Validate first
     this.validateDocumentReference(compound);
     this.validateDocCompoundConstraint(compound, constraint);
 
     // referenced = from, referencing = to
-    const from = `${compound.containerId}/${JSON.stringify(compound.refDocType)}`;
-    const to = `${compound.containerId}/${JSON.stringify(compound.refDocType)}/compound`;
-    //const edgeId = `${from} -> ${JSON.stringify(constraint.compoundProperties)} -> ${to}`;
-
-    this.#constraintsGraph.addVertices(
-      { id: from, vertex: compound },
-      { id: to, vertex: compound }
+    const from = `${compound.containerId}/${stringify(compound.refDocType)}`;
+    const to = `${compound.containerId}/${stringify(compound.refDocType)}/compound`;
+    const vfrom: _ConstraintVertexWithId = {
+      id: from,
+      vertex: { type: 'document', ...compound }
+    };
+    const vto: _ConstraintVertexWithId = {
+      id: to,
+      vertex: { type: 'document', ...compound }
+    };
+    const vertices: _ConstraintVertexWithId[] = [vfrom, vto].filter(
+      (v) => !this.#constraintsGraph.hasVertex(v.id)
     );
-    this.#constraintsGraph.addEdges({ from, to, edge: constraint });
+    this.#constraintsGraph.addVertices(...vertices);
+    this.#constraintsGraph.addEdges({ from, to, edge: { type: 'doc2compound', ...constraint } });
   }
 
-  private validatePartitionReference<TDoc extends Record<string, string>>(
-    partitionRef: PartitionReference<TDoc>
+  private validatePartitionReference<TDoc extends UnknownStringRecord>(
+    partitionRef: AddPartitionReference<TDoc>
   ): void {
     // Check that vertex has schema
     const chunks = this.findPartitionSchemaChunks(partitionRef);
@@ -313,7 +337,7 @@ export class ConstraintsFactory {
     const containerChunks = this.#containerSchemaChunks.get(partitionRef.containerId);
     if (!_.isEqual(chunks, containerChunks)) {
       throw new Error(
-        `Partition key properties ${JSON.stringify(
+        `Partition key properties ${stringify(
           partitionRef.partitionKeyProperties
         )} do not match schema for container ${partitionRef.containerId}. All documents must contain the provided partition key properties.`
       );
@@ -324,9 +348,9 @@ export class ConstraintsFactory {
     TReferencing extends UnknownStringRecord,
     TReferenced extends UnknownStringRecord
   >(
-    referencing: PartitionReference<TReferencing>,
-    constraint: PartitionReferenceConstraint<TReferencing, TReferenced>,
-    referenced: DocumentReference<TReferenced>
+    referencing: AddPartitionReference<TReferencing>,
+    constraint: AddPartition2DocConstraint<TReferencing, TReferenced>,
+    referenced: AddDocumentReference<TReferenced>
   ): void {
     // Check that all partitionKeyProperties are present in the referencing schema
     // At least one chunk should have all partitionKeyProperties
@@ -338,7 +362,7 @@ export class ConstraintsFactory {
     );
     if (!refHasAllPartitionKeys) {
       throw new Error(
-        `Failed to validate referencing constraint ${referencing.containerId}/${JSON.stringify(
+        `Failed to validate referencing constraint ${referencing.containerId}/${stringify(
           referencing.partitionKeyProperties
         )}: all of the partition keys must be present in the keys of the constraint.refProperties`
       );
@@ -357,7 +381,7 @@ export class ConstraintsFactory {
       );
       if (!foundReferencingChunks || foundReferencingChunks.length === 0) {
         throw new Error(
-          `Failed to validate referencing constraint ${referencing.containerId}/${JSON.stringify(referencing.partitionKeyProperties)}/${referencingProperty}: property not found`
+          `Failed to validate referencing constraint ${referencing.containerId}/${stringify(referencing.partitionKeyProperties)}/${referencingProperty}: property not found`
         );
       }
       const foundReferencedChunks = this.findDocumentSchemaChunksForProperty(
@@ -366,7 +390,7 @@ export class ConstraintsFactory {
       );
       if (!foundReferencedChunks || foundReferencedChunks.length === 0) {
         throw new Error(
-          `Failed to validate referenced constraint ${referenced.containerId}/${JSON.stringify(referenced.refDocType)}/${referencedProperty}: property not found`
+          `Failed to validate referenced constraint ${referenced.containerId}/${stringify(referenced.refDocType)}/${referencedProperty}: property not found`
         );
       }
     }
@@ -376,9 +400,9 @@ export class ConstraintsFactory {
     TReferencing extends UnknownStringRecord,
     TReferenced extends UnknownStringRecord
   >(
-    referencing: PartitionReference<TReferencing>,
-    constraint: PartitionReferenceConstraint<TReferencing, TReferenced>,
-    referenced: DocumentReference<TReferenced>
+    referencing: AddPartitionReference<TReferencing>,
+    constraint: AddPartition2DocConstraint<TReferencing, TReferenced>,
+    referenced: AddDocumentReference<TReferenced>
   ): void {
     // Validate first
     this.validatePartitionReference(referencing);
@@ -386,15 +410,22 @@ export class ConstraintsFactory {
     this.validatePartition2DocConstraint(referencing, constraint, referenced);
 
     // referenced = from, referencing = to
-    const from = `${referenced.containerId}/${JSON.stringify(referenced.refDocType)}`;
-    const to = `${referencing.containerId}/${JSON.stringify(referencing.partitionKeyProperties)}`;
-    //const edgeId = `${from} -> ${JSON.stringify(constraint.refProperties)} -> ${to}`;
+    const from = `${referenced.containerId}/${stringify(referenced.refDocType)}`;
+    const to = `${referencing.containerId}/${stringify(referencing.partitionKeyProperties)}`;
 
-    this.#constraintsGraph.addVertices(
-      { id: from, vertex: referenced },
-      { id: to, vertex: referencing }
+    const vfrom: _ConstraintVertexWithId = {
+      id: from,
+      vertex: { type: 'document', ...referenced }
+    };
+    const vto: _ConstraintVertexWithId = {
+      id: to,
+      vertex: { type: 'partition', ...referencing }
+    };
+    const vertices: _ConstraintVertexWithId[] = [vfrom, vto].filter(
+      (v) => !this.#constraintsGraph.hasVertex(v.id)
     );
-    this.#constraintsGraph.addEdges({ from, to, edge: constraint });
+    this.#constraintsGraph.addVertices(...vertices);
+    this.#constraintsGraph.addEdges({ from, to, edge: { type: 'partition2doc', ...constraint } });
   }
 
   public validate(): void {
@@ -458,6 +489,30 @@ export class ConstraintsFactory {
   public build(): Constraints {
     this.validate();
     // Prepare data for fast access to the constraints
-    return new Constraints(this.#constraintsGraph);
+    // Map<ConstraintVertex, ConstraintEdge[][]>: Map all vertices to all paths from this vertex
+    const constraintsMap: Map<_ConstraintVertexWithId, _ConstraintPathElement[][]> = new Map();
+    // Initialize the map with empty arrays
+    for (const vertexId of this.#constraintsGraph.getVertexIds()) {
+      const vertex = this.#constraintsGraph.getVertex(vertexId)!;
+      const paths = new GraphPaths(this.#constraintsGraph);
+      const allPaths = [...paths.getPathsFrom(vertexId)].filter((path) => path.length > 1);
+      const allConstraints: _ConstraintPathElement[][] = allPaths.map((path) => {
+        // Get all the edges in the path
+        const pathEdgeIds = path
+          .map((vertexId, index) => {
+            if (index === 0) {
+              return undefined;
+            }
+            return { from: path[index - 1], to: vertexId } as EdgeId;
+          })
+          .filter((e) => e !== undefined);
+        return pathEdgeIds.map((edgeId) => ({
+          to: { id: edgeId.to, vertex: this.#constraintsGraph.getVertex(edgeId.to)! },
+          edge: { ...edgeId, edge: this.#constraintsGraph.getEdge(edgeId)! }
+        }));
+      });
+      constraintsMap.set({ id: vertexId, vertex }, allConstraints);
+    }
+    return new Constraints(constraintsMap);
   }
 }
