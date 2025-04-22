@@ -44,6 +44,10 @@ export class ConstraintFactory {
   readonly #containerSchemaChunks = new Map<string, DocumentSchemaChunk[]>();
   readonly #constraintsGraph = new DiGraph<Vertex, Edge>();
 
+  get constraintsGraph(): DiGraph<Vertex, Edge> {
+    return this.#constraintsGraph;
+  }
+
   public addDocumentSchema(containerId: string, schema: DocumentSchemaAdapter): void {
     let adapters = this.#containerSchemaAdapters.get(containerId);
     if (!adapters) {
