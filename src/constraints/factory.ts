@@ -427,7 +427,7 @@ export class ConstraintFactory {
       }
       // Check that all edges from this edge are also cascadeDelete = true
       const to = edgeId.to;
-      const allPaths = [...paths.getPathsFrom(to)];
+      const allPaths = [...paths.getPathsFrom(to)].filter((path) => path.length > 1);
       if (allPaths.length === 0) {
         // No paths from edge.to, nothing to check
         continue;
@@ -450,8 +450,15 @@ export class ConstraintFactory {
       // Check that all edges in the path have cascadeDelete = true
       const allCascadeDelete = cascadeDeletePaths.every((e) => e === true);
       if (!allCascadeDelete) {
+        // Find paths that are not cascadeDelete
+        const invalidPaths = allPaths
+          .filter((_, index) => cascadeDeletePaths[index])
+          .map((path) => [edgeId.from, ...path]);
+        const pathStrings = invalidPaths.map((path) => path.join(' -> '));
         throw new Error(
-          `Validation failed: cascade delete constraint violated for edge ${edgeId}, not all edges in the path have cascadeDelete = true`
+          `Validation failed: cascadeDelete = true is not set for all edges in the path(s): ${pathStrings.join(
+            ', '
+          )}. All edges in the path(s) must have cascadeDelete = true.`
         );
       }
     }
