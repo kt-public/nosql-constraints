@@ -325,7 +325,7 @@ describe('Constraint factory', () => {
         'Validation failed: cycles detected in the constraints graph, only acyclic graph is supported at the moment'
       );
     });
-    it('should be able to validate cascade delete: container2/doc1.buddyId -> container1/doc1.id -> container1/doc2.id', ({
+    it('should be able to validate cascade delete: container2/doc1.buddyId -> container1/doc1.id -> container1/doc2.id -> container2/doc2.id', ({
       expect
     }) => {
       const factory = new ConstraintFactory();
@@ -336,12 +336,52 @@ describe('Constraint factory', () => {
         { refProperties: { buddyId: 'id' }, cascadeDelete: true },
         { containerId: 'container1', refDocType: { type: 'C1A' } }
       );
+      factory.addDocument2DocumentConstraint<Container2Doc3, Container1Doc1>(
+        { containerId: 'container2', refDocType: { type: 'C2C' } },
+        { refProperties: { id: 'id' }, cascadeDelete: true },
+        { containerId: 'container1', refDocType: { type: 'C1A' } }
+      );
       factory.addDocument2DocumentConstraint<Container1Doc1, Container1Doc2>(
         { containerId: 'container1', refDocType: { type: 'C1A' } },
         { refProperties: { id: 'id' }, cascadeDelete: true },
         { containerId: 'container1', refDocType: { type: 'C1B' } }
       );
+      factory.addDocument2DocumentConstraint<Container1Doc2, Container2Doc2>(
+        { containerId: 'container1', refDocType: { type: 'C1B' } },
+        { refProperties: { id: 'id' }, cascadeDelete: true },
+        { containerId: 'container2', refDocType: { type: 'C2B' } }
+      );
       expect(factory.validate());
+    });
+    it('should fail to validate cascade delete: container2/doc1.buddyId -> container1/doc1.id -> container1/doc2.id -> container2/doc2.id', ({
+      expect
+    }) => {
+      const factory = new ConstraintFactory();
+      factory.addDocumentSchema('container1', zod(testCaseSchemas.container1));
+      factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
+      factory.addDocument2DocumentConstraint<Container2Doc1, Container1Doc1>(
+        { containerId: 'container2', refDocType: { type: 'C2A' } },
+        { refProperties: { buddyId: 'id' }, cascadeDelete: true },
+        { containerId: 'container1', refDocType: { type: 'C1A' } }
+      );
+      factory.addDocument2DocumentConstraint<Container2Doc3, Container1Doc1>(
+        { containerId: 'container2', refDocType: { type: 'C2C' } },
+        { refProperties: { id: 'id' } },
+        { containerId: 'container1', refDocType: { type: 'C1A' } }
+      );
+      factory.addDocument2DocumentConstraint<Container1Doc1, Container1Doc2>(
+        { containerId: 'container1', refDocType: { type: 'C1A' } },
+        { refProperties: { id: 'id' }, cascadeDelete: true },
+        { containerId: 'container1', refDocType: { type: 'C1B' } }
+      );
+      factory.addDocument2DocumentConstraint<Container1Doc2, Container2Doc2>(
+        { containerId: 'container1', refDocType: { type: 'C1B' } },
+        { refProperties: { id: 'id' }, cascadeDelete: true },
+        { containerId: 'container2', refDocType: { type: 'C2B' } }
+      );
+      expect(() => factory.validate()).toThrowError(
+        'Validation failed: cascadeDelete = true is not set for all edges in the path(s): container1/{"type":"C1B"} -> container1/{"type":"C1A"} -> container2/{"type":"C2A"}. All edges in the path(s) must have cascadeDelete = true.'
+      );
     });
   });
 });
