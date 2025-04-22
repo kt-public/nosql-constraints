@@ -22,7 +22,7 @@ Helpers to manage constrants (i.e. cascade delete) in a NoSQL database
 ```ts
 import { describe, it } from 'vitest';
 import { z } from 'zod';
-import { ConstraintFactory, zod } from 'nosql-constraints';
+import { ConstraintsFactory, zod } from 'nosql-constraints';
 
 const container1DocSchema1 = z.object({
   id: z.string(),
@@ -89,7 +89,7 @@ const testCaseSchemas = {
   container2: container2DocSchema
 };
 
-const factory = new ConstraintFactory();
+const factory = new ConstraintsFactory();
 factory.addDocumentSchema('container1', zod(testCaseSchemas.container1));
 factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
 ```
@@ -98,7 +98,7 @@ factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
 
 ```ts
 it('should be able to add: container2/doc1.buddyId -> container1/doc1.id', () => {
-  const factory = new ConstraintFactory();
+  const factory = new ConstraintsFactory();
   factory.addDocumentSchema('container1', zod(testCaseSchemas.container1));
   factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
   factory.addDocument2DocumentConstraint(
@@ -109,7 +109,7 @@ it('should be able to add: container2/doc1.buddyId -> container1/doc1.id', () =>
 });
 
 it('should be able to add: container2/doc2.buddyIds -> container1/doc1.id', () => {
-  const factory = new ConstraintFactory();
+  const factory = new ConstraintsFactory();
   factory.addDocumentSchema('container1', zod(testCaseSchemas.container1));
   factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
   factory.addDocument2DocumentConstraint(
@@ -120,7 +120,7 @@ it('should be able to add: container2/doc2.buddyIds -> container1/doc1.id', () =
 });
 
 it('should be able to add: container2/doc3.parents[].parentId -> container1/doc1.id', () => {
-  const factory = new ConstraintFactory();
+  const factory = new ConstraintsFactory();
   factory.addDocumentSchema('container1', zod(testCaseSchemas.container1));
   factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
   factory.addDocument2DocumentConstraint(
@@ -131,7 +131,7 @@ it('should be able to add: container2/doc3.parents[].parentId -> container1/doc1
 });
 
 it('should be able to add: container2/["somePartitionKey.someBuddyId"] -> container1/doc1.id', () => {
-  const factory = new ConstraintFactory();
+  const factory = new ConstraintsFactory();
   factory.addDocumentSchema('container1', zod(testCaseSchemas.container1));
   factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
   factory.addPartition2DocumentConstraint(
@@ -142,7 +142,7 @@ it('should be able to add: container2/["somePartitionKey.someBuddyId"] -> contai
 });
 
 it('should be able to add compound: container2/doc3.compoundId -> container2/doc3.compoundId', () => {
-  const factory = new ConstraintFactory();
+  const factory = new ConstraintsFactory();
   factory.addDocumentSchema('container1', zod(testCaseSchemas.container1));
   factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
   factory.addDocumentCompoundConstraint(
