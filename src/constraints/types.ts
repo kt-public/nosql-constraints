@@ -43,8 +43,8 @@ export type Partition2DocConstraint<
   type: 'partition2doc';
   refProperties: Partial<Record<PropertyPaths<TReferencing>, PropertyPaths<TReferenced>>>;
 };
-export type Doc2CompoundConstraint<TDoc extends UnknownStringRecord> = BaseConstraint & {
-  type: 'doc2compound';
+export type CompoundConstraint<TDoc extends UnknownStringRecord> = BaseConstraint & {
+  type: 'compound';
   compoundProperties: PropertyPaths<TDoc>[];
 };
 export type ConstraintEdge<
@@ -53,7 +53,7 @@ export type ConstraintEdge<
 > =
   | Doc2DocConstraint<TReferencing, TReferenced>
   | Partition2DocConstraint<TReferencing, TReferenced>
-  | Doc2CompoundConstraint<TReferencing>;
+  | CompoundConstraint<TReferencing>;
 
 export type ConstraintEdgeWithId<
   TReferencing extends UnknownStringRecord,

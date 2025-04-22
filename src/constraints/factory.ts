@@ -5,10 +5,10 @@ import { CyclesDFS, DiGraph, EdgeId, GraphPaths, IDiGraph } from 'ya-digraph-js'
 import { DocumentSchemaAdapter, DocumentSchemaChunk } from '../adapter/schema';
 import { Constraints } from './constraints';
 import {
+  CompoundConstraint,
   ConstraintEdge,
   ConstraintPathElement,
   ConstraintVertexWithId,
-  Doc2CompoundConstraint,
   Doc2DocConstraint,
   DocumentReference,
   Partition2DocConstraint,
@@ -35,8 +35,8 @@ type AddPartition2DocConstraint<
   TReferencing extends UnknownStringRecord,
   TReferenced extends UnknownStringRecord
 > = Omit<Partition2DocConstraint<TReferencing, TReferenced>, 'type'>;
-type AddDoc2CompoundConstraint<TDoc extends UnknownStringRecord> = Omit<
-  Doc2CompoundConstraint<TDoc>,
+type AddCompoundConstraint<TDoc extends UnknownStringRecord> = Omit<
+  CompoundConstraint<TDoc>,
   'type'
 >;
 
@@ -286,9 +286,9 @@ export class ConstraintsFactory {
     });
   }
 
-  private validateDocCompoundConstraint<TDoc extends UnknownStringRecord>(
+  private validateCompoundConstraint<TDoc extends UnknownStringRecord>(
     compound: AddDocumentReference<TDoc>,
-    constraint: AddDoc2CompoundConstraint<TDoc>
+    constraint: AddCompoundConstraint<TDoc>
   ): void {
     // Check that all compoundProperties are all present in all document schema chunks
     const compoundChunks = this.findDocumentSchemaChunks(compound);
@@ -308,13 +308,13 @@ export class ConstraintsFactory {
     }
   }
 
-  public addDocument2CompoundConstraint<TDoc extends UnknownStringRecord>(
+  public addCompoundConstraint<TDoc extends UnknownStringRecord>(
     compound: AddDocumentReference<TDoc>,
-    constraint: AddDoc2CompoundConstraint<TDoc>
+    constraint: AddCompoundConstraint<TDoc>
   ): void {
     // Validate first
     this.validateDocumentReference(compound);
-    this.validateDocCompoundConstraint(compound, constraint);
+    this.validateCompoundConstraint(compound, constraint);
 
     // referenced = from, referencing = to
     const vfrom = this.constructDocRefVertex(compound);
@@ -324,7 +324,7 @@ export class ConstraintsFactory {
     this.#constraintsGraph.addEdges({
       from: vfrom.id,
       to: vto.id,
-      edge: { type: 'doc2compound', ...constraint }
+      edge: { type: 'compound', ...constraint }
     });
   }
 
