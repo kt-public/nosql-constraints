@@ -255,7 +255,7 @@ describe('Constraint factory', () => {
       const factory = new ConstraintsFactory();
       factory.addDocumentSchema('container1', zod(testCaseSchemas.container1));
       factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
-      factory.addDocument2CompoundConstraint<Container2Doc3>(
+      factory.addCompoundConstraint<Container2Doc3>(
         { containerId: 'container2', refDocType: { type: 'C2C' } },
         { compoundProperties: ['compoundId'], cascadeDelete: true }
       );
@@ -269,7 +269,7 @@ describe('Constraint factory', () => {
       factory.addDocumentSchema('container1', zod(testCaseSchemas.container1));
       factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
       expect(() => {
-        factory.addDocument2CompoundConstraint<Container2Doc3>(
+        factory.addCompoundConstraint<Container2Doc3>(
           { containerId: 'container2', refDocType: { type: 'C2C' } },
           // @ts-expect-error: Testing invalid property name to ensure error handling
           { compoundProperties: ['compoundId', 'compoundIdx'] }
@@ -404,7 +404,7 @@ describe('Constraint factory', () => {
         { refProperties: { id: 'id' }, cascadeDelete: true },
         { containerId: 'container1', refDocType: { type: 'C1A' } }
       );
-      factory.addDocument2CompoundConstraint<Container2Doc3>(
+      factory.addCompoundConstraint<Container2Doc3>(
         { containerId: 'container2', refDocType: { type: 'C2C' } },
         { compoundProperties: ['compoundId'], cascadeDelete: true }
       );
@@ -520,7 +520,7 @@ describe('Constraint factory', () => {
             from: 'container2/{"type":"C2C"}',
             to: 'container2/{"type":"C2C"}/compound',
             edge: {
-              type: 'doc2compound',
+              type: 'compound',
               compoundProperties: ['compoundId'],
               cascadeDelete: true
             }

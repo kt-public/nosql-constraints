@@ -282,7 +282,7 @@ it('should be able to validate cascade delete: container2/doc1.buddyId -> contai
         from: 'container2/{"type":"C2C"}',
         to: 'container2/{"type":"C2C"}/compound',
         edge: {
-          type: 'doc2compound',
+          type: 'compound',
           compoundProperties: ['compoundId'],
           cascadeDelete: true
         }
