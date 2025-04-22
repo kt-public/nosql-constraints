@@ -39,7 +39,7 @@ type DocCompoundConstraint<TDoc extends Record<string, unknown>> = Edge & {
   compoundProperties: PropertyPaths<TDoc>[];
 };
 
-export class ConstraintFactory {
+export class ConstraintsFactory {
   readonly #containerSchemaAdapters = new Map<string, DocumentSchemaAdapter[]>();
   readonly #containerSchemaChunks = new Map<string, DocumentSchemaChunk[]>();
   readonly #constraintsGraph = new DiGraph<Vertex, Edge>();
