@@ -245,6 +245,22 @@ export class ConstraintsFactory {
     }
   }
 
+  private constructDocRefVertex(
+    reference: AddDocumentReference<UnknownStringRecord>
+  ): _ConstraintVertexWithId {
+    const id = `${reference.containerId}/${stringify(reference.refDocType)}`;
+    return {
+      id,
+      vertex: { type: 'document', ...reference }
+    };
+  }
+
+  private constructAndFilterVertices(
+    ...vertices: _ConstraintVertexWithId[]
+  ): _ConstraintVertexWithId[] {
+    return vertices.filter((v) => !this.#constraintsGraph.hasVertex(v.id));
+  }
+
   public addDocument2DocumentConstraint<
     TReferencing extends UnknownStringRecord,
     TReferenced extends UnknownStringRecord
@@ -259,21 +275,15 @@ export class ConstraintsFactory {
     this.validateDoc2DocConstraint(referencing, constraint, referenced);
 
     // referenced = from, referencing = to
-    const from = `${referenced.containerId}/${stringify(referenced.refDocType)}`;
-    const to = `${referencing.containerId}/${stringify(referencing.refDocType)}`;
-    const vfrom: _ConstraintVertexWithId = {
-      id: from,
-      vertex: { type: 'document', ...referenced }
-    };
-    const vto: _ConstraintVertexWithId = {
-      id: to,
-      vertex: { type: 'document', ...referencing }
-    };
-    const vertices: _ConstraintVertexWithId[] = [vfrom, vto].filter(
-      (v) => !this.#constraintsGraph.hasVertex(v.id)
-    );
+    const vfrom = this.constructDocRefVertex(referenced);
+    const vto = this.constructDocRefVertex(referencing);
+    const vertices = this.constructAndFilterVertices(vfrom, vto);
     this.#constraintsGraph.addVertices(...vertices);
-    this.#constraintsGraph.addEdges({ from, to, edge: { type: 'doc2doc', ...constraint } });
+    this.#constraintsGraph.addEdges({
+      from: vfrom.id,
+      to: vto.id,
+      edge: { type: 'doc2doc', ...constraint }
+    });
   }
 
   private validateDocCompoundConstraint<TDoc extends UnknownStringRecord>(
@@ -307,21 +317,15 @@ export class ConstraintsFactory {
     this.validateDocCompoundConstraint(compound, constraint);
 
     // referenced = from, referencing = to
-    const from = `${compound.containerId}/${stringify(compound.refDocType)}`;
-    const to = `${compound.containerId}/${stringify(compound.refDocType)}/compound`;
-    const vfrom: _ConstraintVertexWithId = {
-      id: from,
-      vertex: { type: 'document', ...compound }
-    };
-    const vto: _ConstraintVertexWithId = {
-      id: to,
-      vertex: { type: 'document', ...compound }
-    };
-    const vertices: _ConstraintVertexWithId[] = [vfrom, vto].filter(
-      (v) => !this.#constraintsGraph.hasVertex(v.id)
-    );
+    const vfrom = this.constructDocRefVertex(compound);
+    const vto = { ...vfrom, id: `${vfrom.id}/compound` };
+    const vertices = this.constructAndFilterVertices(vfrom, vto);
     this.#constraintsGraph.addVertices(...vertices);
-    this.#constraintsGraph.addEdges({ from, to, edge: { type: 'doc2compound', ...constraint } });
+    this.#constraintsGraph.addEdges({
+      from: vfrom.id,
+      to: vto.id,
+      edge: { type: 'doc2compound', ...constraint }
+    });
   }
 
   private validatePartitionReference<TDoc extends UnknownStringRecord>(
@@ -395,6 +399,16 @@ export class ConstraintsFactory {
     }
   }
 
+  private constructPartitionRefVertex(
+    reference: AddPartitionReference<UnknownStringRecord>
+  ): _ConstraintVertexWithId {
+    const id = `${reference.containerId}/${stringify(reference.partitionKeyProperties)}`;
+    return {
+      id,
+      vertex: { type: 'partition', ...reference }
+    };
+  }
+
   public addPartition2DocumentConstraint<
     TReferencing extends UnknownStringRecord,
     TReferenced extends UnknownStringRecord
@@ -409,22 +423,15 @@ export class ConstraintsFactory {
     this.validatePartition2DocConstraint(referencing, constraint, referenced);
 
     // referenced = from, referencing = to
-    const from = `${referenced.containerId}/${stringify(referenced.refDocType)}`;
-    const to = `${referencing.containerId}/${stringify(referencing.partitionKeyProperties)}`;
-
-    const vfrom: _ConstraintVertexWithId = {
-      id: from,
-      vertex: { type: 'document', ...referenced }
-    };
-    const vto: _ConstraintVertexWithId = {
-      id: to,
-      vertex: { type: 'partition', ...referencing }
-    };
-    const vertices: _ConstraintVertexWithId[] = [vfrom, vto].filter(
-      (v) => !this.#constraintsGraph.hasVertex(v.id)
-    );
+    const vfrom = this.constructDocRefVertex(referenced);
+    const vto = this.constructPartitionRefVertex(referencing);
+    const vertices = this.constructAndFilterVertices(vfrom, vto);
     this.#constraintsGraph.addVertices(...vertices);
-    this.#constraintsGraph.addEdges({ from, to, edge: { type: 'partition2doc', ...constraint } });
+    this.#constraintsGraph.addEdges({
+      from: vfrom.id,
+      to: vto.id,
+      edge: { type: 'partition2doc', ...constraint }
+    });
   }
 
   public validate(): void {
