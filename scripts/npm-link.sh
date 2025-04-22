@@ -11,7 +11,7 @@ allDependencies+=($(jq -r '.devDependencies | keys[]' package.json))
 
 separator="------------------------------------------"
 
-echo -e "Checking for linked packages from dependencies and devDependencies:\n${separator}\n${allDependencies[@]}\n${separator}\n"
+echo -e "Checking for linked packages from dependencies and devDependencies..."
 # Extract available global link package names only
 # npm ls -g --depth=0 --link=true
 #  example output per package: typesafe-utilities@0.2.2 -> ./../../../../../SAPDevelop/git/personal/VolksRebal/typesafe-utilities

@@ -1,6 +1,7 @@
+import { UnknownStringRecord } from 'typesafe-utilities';
 import { describe, it } from 'vitest';
 import { z } from 'zod';
-import { ConstraintsFactory, zod } from '../../src/index';
+import { ConstraintPathElement, ConstraintsFactory, zod } from '../../src/index';
 
 const container1Doc1Schema = z.object({
   id: z.string(),
@@ -74,6 +75,8 @@ const testCaseSchemas = {
   container1: container1DocSchema,
   container2: container2DocSchema
 };
+
+type _ConstraintPathElement = ConstraintPathElement<UnknownStringRecord, UnknownStringRecord>;
 
 describe('Constraint factory', () => {
   describe('Document schema', () => {
@@ -252,7 +255,7 @@ describe('Constraint factory', () => {
       const factory = new ConstraintsFactory();
       factory.addDocumentSchema('container1', zod(testCaseSchemas.container1));
       factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
-      factory.addDocumentCompoundConstraint<Container2Doc3>(
+      factory.addDocument2CompoundConstraint<Container2Doc3>(
         { containerId: 'container2', refDocType: { type: 'C2C' } },
         { compoundProperties: ['compoundId'], cascadeDelete: true }
       );
@@ -266,7 +269,7 @@ describe('Constraint factory', () => {
       factory.addDocumentSchema('container1', zod(testCaseSchemas.container1));
       factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
       expect(() => {
-        factory.addDocumentCompoundConstraint<Container2Doc3>(
+        factory.addDocument2CompoundConstraint<Container2Doc3>(
           { containerId: 'container2', refDocType: { type: 'C2C' } },
           // @ts-expect-error: Testing invalid property name to ensure error handling
           { compoundProperties: ['compoundId', 'compoundIdx'] }
@@ -382,6 +385,149 @@ describe('Constraint factory', () => {
       expect(() => factory.validate()).toThrowError(
         'Validation failed: cascadeDelete = true is not set for all edges in the path(s): container1/{"type":"C1B"} -> container1/{"type":"C1A"} -> container2/{"type":"C2A"}. All edges in the path(s) must have cascadeDelete = true.'
       );
+    });
+  });
+  describe('Build', () => {
+    it('should be able to validate cascade delete: container2/doc1.buddyId -> container1/doc1.id -> container1/doc2.id -> container2/doc2.id', ({
+      expect
+    }) => {
+      const factory = new ConstraintsFactory();
+      factory.addDocumentSchema('container1', zod(testCaseSchemas.container1));
+      factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
+      factory.addDocument2DocumentConstraint<Container2Doc1, Container1Doc1>(
+        { containerId: 'container2', refDocType: { type: 'C2A' } },
+        { refProperties: { buddyId: 'id' }, cascadeDelete: true },
+        { containerId: 'container1', refDocType: { type: 'C1A' } }
+      );
+      factory.addDocument2DocumentConstraint<Container2Doc3, Container1Doc1>(
+        { containerId: 'container2', refDocType: { type: 'C2C' } },
+        { refProperties: { id: 'id' }, cascadeDelete: true },
+        { containerId: 'container1', refDocType: { type: 'C1A' } }
+      );
+      factory.addDocument2CompoundConstraint<Container2Doc3>(
+        { containerId: 'container2', refDocType: { type: 'C2C' } },
+        { compoundProperties: ['compoundId'], cascadeDelete: true }
+      );
+      factory.addPartition2DocumentConstraint<Container2Doc, Container1Doc1>(
+        { containerId: 'container2', partitionKeyProperties: ['somePartitionKey.someBuddyId'] },
+        { refProperties: { 'somePartitionKey.someBuddyId': 'id' }, cascadeDelete: true },
+        { containerId: 'container1', refDocType: { type: 'C1A' } }
+      );
+      factory.addDocument2DocumentConstraint<Container1Doc1, Container1Doc2>(
+        { containerId: 'container1', refDocType: { type: 'C1A' } },
+        { refProperties: { id: 'id' }, cascadeDelete: true },
+        { containerId: 'container1', refDocType: { type: 'C1B' } }
+      );
+      factory.addDocument2DocumentConstraint<Container1Doc2, Container2Doc2>(
+        { containerId: 'container1', refDocType: { type: 'C1B' } },
+        { refProperties: { id: 'id' }, cascadeDelete: true },
+        { containerId: 'container2', refDocType: { type: 'C2B' } }
+      );
+      const constraints = factory.build();
+      expect(constraints).toBeDefined();
+      let directConstraints = constraints.getDirectDocumentConstraints<Container1Doc1>(
+        'container1',
+        {
+          type: 'C1A'
+        }
+      );
+      let expectedConstraints: _ConstraintPathElement[] = [
+        {
+          to: {
+            id: 'container2/{"type":"C2A"}',
+            vertex: {
+              type: 'document',
+              containerId: 'container2',
+              refDocType: {
+                type: 'C2A'
+              }
+            }
+          },
+          edge: {
+            from: 'container1/{"type":"C1A"}',
+            to: 'container2/{"type":"C2A"}',
+            edge: {
+              type: 'doc2doc',
+              refProperties: {
+                buddyId: 'id'
+              },
+              cascadeDelete: true
+            }
+          }
+        },
+        {
+          to: {
+            id: 'container2/{"type":"C2C"}',
+            vertex: {
+              type: 'document',
+              containerId: 'container2',
+              refDocType: {
+                type: 'C2C'
+              }
+            }
+          },
+          edge: {
+            from: 'container1/{"type":"C1A"}',
+            to: 'container2/{"type":"C2C"}',
+            edge: {
+              type: 'doc2doc',
+              refProperties: {
+                id: 'id'
+              },
+              cascadeDelete: true
+            }
+          }
+        },
+        {
+          to: {
+            id: 'container2/["somePartitionKey.someBuddyId"]',
+            vertex: {
+              type: 'partition',
+              containerId: 'container2',
+              partitionKeyProperties: ['somePartitionKey.someBuddyId']
+            }
+          },
+          edge: {
+            from: 'container1/{"type":"C1A"}',
+            to: 'container2/["somePartitionKey.someBuddyId"]',
+            edge: {
+              type: 'partition2doc',
+              refProperties: {
+                'somePartitionKey.someBuddyId': 'id'
+              },
+              cascadeDelete: true
+            }
+          }
+        }
+      ];
+      expect(directConstraints).toEqual(expectedConstraints);
+      directConstraints = constraints.getDirectDocumentConstraints<Container2Doc>('container2', {
+        type: 'C2C'
+      });
+      expectedConstraints = [
+        {
+          to: {
+            id: 'container2/{"type":"C2C"}/compound',
+            vertex: {
+              type: 'document',
+              containerId: 'container2',
+              refDocType: {
+                type: 'C2C'
+              }
+            }
+          },
+          edge: {
+            from: 'container2/{"type":"C2C"}',
+            to: 'container2/{"type":"C2C"}/compound',
+            edge: {
+              type: 'doc2compound',
+              compoundProperties: ['compoundId'],
+              cascadeDelete: true
+            }
+          }
+        }
+      ];
+      expect(directConstraints).toEqual(expectedConstraints);
     });
   });
 });
