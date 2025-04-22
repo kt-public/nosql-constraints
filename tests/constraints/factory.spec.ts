@@ -277,4 +277,54 @@ describe('Constraint factory', () => {
       );
     });
   });
+  describe('Validation', () => {
+    it('should be able to validate: container2/doc1.buddyId -> container1/doc1.id', ({
+      expect
+    }) => {
+      const factory = new ConstraintFactory();
+      factory.addDocumentSchema('container1', zod(testCaseSchemas.container1));
+      factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
+      factory.addDocument2DocumentConstraint<Container2Doc1, Container1Doc1>(
+        { containerId: 'container2', refDocType: { type: 'C2A' } },
+        { refProperties: { buddyId: 'id' }, cascadeDelete: true },
+        { containerId: 'container1', refDocType: { type: 'C1A' } }
+      );
+      expect(factory.validate());
+    });
+    it('should fail to add self cycle: container2/doc1.buddyId -> container2/doc1.buddyId', ({
+      expect
+    }) => {
+      const factory = new ConstraintFactory();
+      factory.addDocumentSchema('container1', zod(testCaseSchemas.container1));
+      factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
+      expect(() =>
+        factory.addDocument2DocumentConstraint<Container2Doc1, Container2Doc1>(
+          { containerId: 'container2', refDocType: { type: 'C2A' } },
+          { refProperties: { buddyId: 'id' }, cascadeDelete: true },
+          { containerId: 'container2', refDocType: { type: 'C2A' } }
+        )
+      ).toThrowError('Duplicate vertex ids found in the input: container2/{"type":"C2A"}');
+    });
+    it('should be fail to validate with cycles: container2/doc1.buddyId -> container1/doc1.id -> container2/doc1.buddyId', ({
+      expect
+    }) => {
+      const factory = new ConstraintFactory();
+      factory.addDocumentSchema('container1', zod(testCaseSchemas.container1));
+      factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
+      factory.addDocument2DocumentConstraint<Container2Doc1, Container1Doc1>(
+        { containerId: 'container2', refDocType: { type: 'C2A' } },
+        { refProperties: { buddyId: 'id' }, cascadeDelete: true },
+        { containerId: 'container1', refDocType: { type: 'C1A' } }
+      );
+      factory.addDocument2DocumentConstraint<Container1Doc1, Container2Doc1>(
+        { containerId: 'container1', refDocType: { type: 'C1A' } },
+        { refProperties: { id: 'buddyId' }, cascadeDelete: true },
+        { containerId: 'container2', refDocType: { type: 'C2A' } }
+      );
+      expect([...factory.constraintsGraph.getEdgeIds()].length).toBe(2);
+      expect(() => factory.validate()).toThrowError(
+        'Validation failed: cycles detected in the constraints graph, only acyclic graph is supported at the moment'
+      );
+    });
+  });
 });
