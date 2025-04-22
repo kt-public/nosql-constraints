@@ -8,16 +8,20 @@ npm ci
 link_packages=(
   "typesafe-utilities"
   "ya-digraph-js"
+  "yatayata"
 )
-# Loop through each package and check if it is available for linking globally and link it
-# Otherwise print warning message and continue to the next package
+# Check if the packages are available for linking
+available_packages=()
 for package in "${link_packages[@]}"; do
-  if npm link --no-bin-links "$package"; then
-    echo "Linked $package successfully."
+  echo "Checking if $package is available for linking..."
+  if npm ls -g --depth=0 --link=true "$package"; then
+    available_packages+=("$package")
   else
-    echo "Warning: $package is not available for linking globally. Skipping..."
+    echo "Warning: Package $package not found. Skipping linking."
   fi
 done
+# Link all packages at once, because linking them one by one resets other links: npm link package1 package2 ...
+npm link "${available_packages[@]}"
 
 # Run checks
 npm run lint
