@@ -1,6 +1,6 @@
 import { describe, it } from 'vitest';
 import { z } from 'zod';
-import { ConstraintFactory, zod } from '../../src/index';
+import { ConstraintsFactory, zod } from '../../src/index';
 
 const container1Doc1Schema = z.object({
   id: z.string(),
@@ -78,14 +78,14 @@ const testCaseSchemas = {
 describe('Constraint factory', () => {
   describe('Document schema', () => {
     it('should be able to add container1 schema', ({ expect }) => {
-      const factory = new ConstraintFactory();
+      const factory = new ConstraintsFactory();
       factory.addDocumentSchema('container1', zod(container1Doc1Schema));
       factory.addDocumentSchema('container1', zod(container1Doc2Schema));
       expect([...factory.constraintsGraph.getVertexIds()].length).toBe(0);
       expect([...factory.constraintsGraph.getEdgeIds()].length).toBe(0);
     });
     it('should be able to add container2 schema', ({ expect }) => {
-      const factory = new ConstraintFactory();
+      const factory = new ConstraintsFactory();
       factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
       expect([...factory.constraintsGraph.getVertexIds()].length).toBe(0);
       expect([...factory.constraintsGraph.getEdgeIds()].length).toBe(0);
@@ -95,7 +95,7 @@ describe('Constraint factory', () => {
     it('should fail to add: container2/doc1.buddyId -> container1/doc1.id - without schema', ({
       expect
     }) => {
-      const factory = new ConstraintFactory();
+      const factory = new ConstraintsFactory();
       expect(() => {
         factory.addDocument2DocumentConstraint<Container2Doc1, Container1Doc1>(
           { containerId: 'container2', refDocType: { type: 'C2A' } },
@@ -107,7 +107,7 @@ describe('Constraint factory', () => {
     it('should fail to add: container2/doc1.buddyId -> container1/doc1.id - no match for refDocType', ({
       expect
     }) => {
-      const factory = new ConstraintFactory();
+      const factory = new ConstraintsFactory();
       factory.addDocumentSchema('container1', zod(testCaseSchemas.container1));
       factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
       expect(() => {
@@ -128,7 +128,7 @@ describe('Constraint factory', () => {
       }).toThrowError('Missing schema for container container1 and refDocType {"typeZ":"C1X"}');
     });
     it('should be able to add: container2/doc1.buddyId -> container1/doc1.id', ({ expect }) => {
-      const factory = new ConstraintFactory();
+      const factory = new ConstraintsFactory();
       factory.addDocumentSchema('container1', zod(testCaseSchemas.container1));
       factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
       factory.addDocument2DocumentConstraint<Container2Doc1, Container1Doc1>(
@@ -140,7 +140,7 @@ describe('Constraint factory', () => {
       expect([...factory.constraintsGraph.getEdgeIds()].length).toBe(1);
     });
     it('should fail to add: container2/doc1.buddyId -> container1/doc1.id', ({ expect }) => {
-      const factory = new ConstraintFactory();
+      const factory = new ConstraintsFactory();
       factory.addDocumentSchema('container1', zod(testCaseSchemas.container1));
       factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
       expect(() => {
@@ -155,7 +155,7 @@ describe('Constraint factory', () => {
       );
     });
     it('should fail to add: container2/doc1.buddyId -> container1/doc1.id', ({ expect }) => {
-      const factory = new ConstraintFactory();
+      const factory = new ConstraintsFactory();
       factory.addDocumentSchema('container1', zod(testCaseSchemas.container1));
       factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
       expect(() => {
@@ -170,7 +170,7 @@ describe('Constraint factory', () => {
       );
     });
     it('should be able to add: container2/doc2.buddyIds -> container1/doc1.id', ({ expect }) => {
-      const factory = new ConstraintFactory();
+      const factory = new ConstraintsFactory();
       factory.addDocumentSchema('container1', zod(testCaseSchemas.container1));
       factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
       factory.addDocument2DocumentConstraint<Container2Doc2, Container1Doc1>(
@@ -184,7 +184,7 @@ describe('Constraint factory', () => {
     it('should be able to add: container2/doc3.parents[].parentId -> container1/doc1.id', ({
       expect
     }) => {
-      const factory = new ConstraintFactory();
+      const factory = new ConstraintsFactory();
       factory.addDocumentSchema('container1', zod(testCaseSchemas.container1));
       factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
       factory.addDocument2DocumentConstraint<Container2Doc3, Container1Doc1>(
@@ -198,7 +198,7 @@ describe('Constraint factory', () => {
     it('should be able to add: container2/doc3.parents[].parentId -> container1/doc1.id -> funny refDocType', ({
       expect
     }) => {
-      const factory = new ConstraintFactory();
+      const factory = new ConstraintsFactory();
       factory.addDocumentSchema('container1', zod(testCaseSchemas.container1));
       factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
       factory.addDocument2DocumentConstraint<Container2Doc2, Container1Doc1>(
@@ -217,7 +217,7 @@ describe('Constraint factory', () => {
     it('should be able to add: container2/["somePartitionKey.someBuddyId"] -> container1/doc1.id', ({
       expect
     }) => {
-      const factory = new ConstraintFactory();
+      const factory = new ConstraintsFactory();
       factory.addDocumentSchema('container1', zod(testCaseSchemas.container1));
       factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
       factory.addPartition2DocumentConstraint<Container2Doc, Container1Doc1>(
@@ -231,7 +231,7 @@ describe('Constraint factory', () => {
     it('should fail to add: container2/["somePartitionKey.someBuddyId"] -> container1/doc1.id', ({
       expect
     }) => {
-      const factory = new ConstraintFactory();
+      const factory = new ConstraintsFactory();
       factory.addDocumentSchema('container1', zod(testCaseSchemas.container1));
       factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
       expect(() => {
@@ -249,7 +249,7 @@ describe('Constraint factory', () => {
     it('should be able to add compound: container2/doc3.compoundId -> container2/doc3.compoundId', ({
       expect
     }) => {
-      const factory = new ConstraintFactory();
+      const factory = new ConstraintsFactory();
       factory.addDocumentSchema('container1', zod(testCaseSchemas.container1));
       factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
       factory.addDocumentCompoundConstraint<Container2Doc3>(
@@ -262,7 +262,7 @@ describe('Constraint factory', () => {
     it('should fail to add compound: container2/doc3.compoundId -> container2/doc3.compoundId', ({
       expect
     }) => {
-      const factory = new ConstraintFactory();
+      const factory = new ConstraintsFactory();
       factory.addDocumentSchema('container1', zod(testCaseSchemas.container1));
       factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
       expect(() => {
@@ -280,7 +280,7 @@ describe('Constraint factory', () => {
     it('should be able to validate: container2/doc1.buddyId -> container1/doc1.id', ({
       expect
     }) => {
-      const factory = new ConstraintFactory();
+      const factory = new ConstraintsFactory();
       factory.addDocumentSchema('container1', zod(testCaseSchemas.container1));
       factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
       factory.addDocument2DocumentConstraint<Container2Doc1, Container1Doc1>(
@@ -293,7 +293,7 @@ describe('Constraint factory', () => {
     it('should fail to add self cycle: container2/doc1.buddyId -> container2/doc1.buddyId', ({
       expect
     }) => {
-      const factory = new ConstraintFactory();
+      const factory = new ConstraintsFactory();
       factory.addDocumentSchema('container1', zod(testCaseSchemas.container1));
       factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
       expect(() =>
@@ -307,7 +307,7 @@ describe('Constraint factory', () => {
     it('should be fail to validate with cycles: container2/doc1.buddyId -> container1/doc1.id -> container2/doc1.buddyId', ({
       expect
     }) => {
-      const factory = new ConstraintFactory();
+      const factory = new ConstraintsFactory();
       factory.addDocumentSchema('container1', zod(testCaseSchemas.container1));
       factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
       factory.addDocument2DocumentConstraint<Container2Doc1, Container1Doc1>(
@@ -328,7 +328,7 @@ describe('Constraint factory', () => {
     it('should be able to validate cascade delete: container2/doc1.buddyId -> container1/doc1.id -> container1/doc2.id -> container2/doc2.id', ({
       expect
     }) => {
-      const factory = new ConstraintFactory();
+      const factory = new ConstraintsFactory();
       factory.addDocumentSchema('container1', zod(testCaseSchemas.container1));
       factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
       factory.addDocument2DocumentConstraint<Container2Doc1, Container1Doc1>(
@@ -356,7 +356,7 @@ describe('Constraint factory', () => {
     it('should fail to validate cascade delete: container2/doc1.buddyId -> container1/doc1.id -> container1/doc2.id -> container2/doc2.id', ({
       expect
     }) => {
-      const factory = new ConstraintFactory();
+      const factory = new ConstraintsFactory();
       factory.addDocumentSchema('container1', zod(testCaseSchemas.container1));
       factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
       factory.addDocument2DocumentConstraint<Container2Doc1, Container1Doc1>(
