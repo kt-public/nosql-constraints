@@ -19,7 +19,6 @@ import {
 type _ConstraintVertex = ConstraintVertex<UnknownStringRecord>;
 type _ConstraintVertexWithId = ConstraintVertexWithId<UnknownStringRecord>;
 type _ConstraintEdge = ConstraintEdge<UnknownStringRecord, UnknownStringRecord>;
-// type _ConstraintEdgeWithId = ConstraintEdge<UnknownStringRecord, UnknownStringRecord>;
 type _ConstraintPathElement = ConstraintPathElement<UnknownStringRecord, UnknownStringRecord>;
 
 // method helper types
