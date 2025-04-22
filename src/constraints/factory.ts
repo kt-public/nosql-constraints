@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import { type DeepPartial, type PropertyPaths } from 'typesafe-utilities';
-import { DiGraph } from 'ya-digraph-js';
+import { CyclesDFS, DiGraph } from 'ya-digraph-js';
 import { DocumentSchemaAdapter, DocumentSchemaChunk } from '../adapter/schema';
 
 type RefDocType<TDoc extends Record<string, unknown>> = DeepPartial<TDoc>;
@@ -260,11 +260,11 @@ export class ConstraintFactory {
     // referenced = from, referencing = to
     const from = `${referenced.containerId}/${JSON.stringify(referenced.refDocType)}`;
     const to = `${referencing.containerId}/${JSON.stringify(referencing.refDocType)}`;
-    //const edgeId = `${from} -> ${JSON.stringify(constraint.refProperties)} -> ${to}`;
-    this.#constraintsGraph.addVertices(
+    const vertices = [
       { id: from, vertex: referenced },
       { id: to, vertex: referencing }
-    );
+    ].filter((v) => !this.#constraintsGraph.hasVertex(v.id));
+    this.#constraintsGraph.addVertices(...vertices);
     this.#constraintsGraph.addEdges({ from, to, edge: constraint });
   }
 
@@ -404,5 +404,15 @@ export class ConstraintFactory {
       { id: to, vertex: referencing }
     );
     this.#constraintsGraph.addEdges({ from, to, edge: constraint });
+  }
+
+  public validate(): void {
+    // Check that there are no cycles in the graph
+    const cycles = new CyclesDFS(this.#constraintsGraph);
+    if (cycles.hasCycles()) {
+      throw new Error(
+        'Validation failed: cycles detected in the constraints graph, only acyclic graph is supported at the moment'
+      );
+    }
   }
 }
