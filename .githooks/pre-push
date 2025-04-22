@@ -4,25 +4,6 @@ set -e
 
 # Prepare the environment
 npm ci
-# Array of packages we want to check if they are available for linking
-link_packages=(
-  "typesafe-utilities"
-  "ya-digraph-js"
-)
-# Check if the packages are available for linking
-available_packages=()
-for package in "${link_packages[@]}"; do
-  echo "Checking if $package is available for linking..."
-  if npm ls -g --depth=0 --link=true "$package"; then
-    available_packages+=("$package")
-  else
-    echo "Warning: Package $package not found. Skipping linking."
-  fi
-done
-# Link all packages at once, because linking them one by one resets other links: npm link package1 package2 ...
-npm link "${available_packages[@]}"
-echo "Warning: You may need to make sure that the linked packages are released and up to date."
-echo "Warning: While the checks may work locally, they may fail on CI/CD if the linked packages are not released and up to date."
 
 # Run checks
 npm run lint
