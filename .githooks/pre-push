@@ -8,7 +8,6 @@ npm ci
 link_packages=(
   "typesafe-utilities"
   "ya-digraph-js"
-  "yatayata"
 )
 # Check if the packages are available for linking
 available_packages=()
