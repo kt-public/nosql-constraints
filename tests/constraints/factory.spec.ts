@@ -17,7 +17,6 @@ const container1Doc2Schema = z.object({
   email: z.string(),
   childrenRefIds: z.array(z.string())
 });
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type Container1Doc2 = z.infer<typeof container1Doc2Schema>;
 const container1DocSchema = z.discriminatedUnion('type', [
   container1Doc1Schema,
@@ -325,6 +324,24 @@ describe('Constraint factory', () => {
       expect(() => factory.validate()).toThrowError(
         'Validation failed: cycles detected in the constraints graph, only acyclic graph is supported at the moment'
       );
+    });
+    it('should be able to validate cascade delete: container2/doc1.buddyId -> container1/doc1.id -> container1/doc2.id', ({
+      expect
+    }) => {
+      const factory = new ConstraintFactory();
+      factory.addDocumentSchema('container1', zod(testCaseSchemas.container1));
+      factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
+      factory.addDocument2DocumentConstraint<Container2Doc1, Container1Doc1>(
+        { containerId: 'container2', refDocType: { type: 'C2A' } },
+        { refProperties: { buddyId: 'id' }, cascadeDelete: true },
+        { containerId: 'container1', refDocType: { type: 'C1A' } }
+      );
+      factory.addDocument2DocumentConstraint<Container1Doc1, Container1Doc2>(
+        { containerId: 'container1', refDocType: { type: 'C1A' } },
+        { refProperties: { id: 'id' }, cascadeDelete: true },
+        { containerId: 'container1', refDocType: { type: 'C1B' } }
+      );
+      expect(factory.validate());
     });
   });
 });

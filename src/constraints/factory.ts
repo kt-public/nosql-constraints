@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import { type DeepPartial, type PropertyPaths } from 'typesafe-utilities';
-import { CyclesDFS, DiGraph } from 'ya-digraph-js';
+import { CyclesDFS, DiGraph, EdgeId, GraphPaths } from 'ya-digraph-js';
 import { DocumentSchemaAdapter, DocumentSchemaChunk } from '../adapter/schema';
 
 type RefDocType<TDoc extends Record<string, unknown>> = DeepPartial<TDoc>;
@@ -413,6 +413,47 @@ export class ConstraintFactory {
       throw new Error(
         'Validation failed: cycles detected in the constraints graph, only acyclic graph is supported at the moment'
       );
+    }
+    // Now we need to validate cascade delete
+    // We need to check that for each edge, that has cascadeDelete = true, all further edges are also cascadeDelete = true
+    // Otherwise its an error
+    const edgeIds = this.#constraintsGraph.getEdgeIds();
+    const paths = new GraphPaths(this.#constraintsGraph);
+    for (const edgeId of edgeIds) {
+      const edge = this.#constraintsGraph.getEdge(edgeId);
+      if (edge?.cascadeDelete !== true) {
+        // Nothing to check
+        continue;
+      }
+      // Check that all edges from this edge are also cascadeDelete = true
+      const to = edgeId.to;
+      const allPaths = [...paths.getPathsFrom(to)];
+      if (allPaths.length === 0) {
+        // No paths from edge.to, nothing to check
+        continue;
+      }
+      // Check that all paths have cascadeDelete = true down to the leaves
+      const cascadeDeletePaths = allPaths.map((path) => {
+        const pathEdgeIds = path
+          .map((vertexId, index) => {
+            if (index === 0) {
+              return undefined;
+            }
+            return { from: path[index - 1], to: vertexId } as EdgeId;
+          })
+          .filter((e) => e !== undefined);
+        const cascadeDeleteEdges = pathEdgeIds.map(
+          (edgeId) => this.#constraintsGraph.getEdge(edgeId)?.cascadeDelete
+        );
+        return cascadeDeleteEdges.every((e) => e === true);
+      });
+      // Check that all edges in the path have cascadeDelete = true
+      const allCascadeDelete = cascadeDeletePaths.every((e) => e === true);
+      if (!allCascadeDelete) {
+        throw new Error(
+          `Validation failed: cascade delete constraint violated for edge ${edgeId}, not all edges in the path have cascadeDelete = true`
+        );
+      }
     }
   }
 }
