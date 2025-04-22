@@ -2,6 +2,23 @@
 
 set -e
 
+# Prepare the environment
 npm ci
+# Array of packages we want to check if they are available for linking
+link_packages=(
+  "typesafe-utilities"
+  "ya-digraph-js"
+)
+# Loop through each package and check if it is available for linking globally and link it
+# Otherwise print warning message and continue to the next package
+for package in "${link_packages[@]}"; do
+  if npm link --no-bin-links "$package"; then
+    echo "Linked $package successfully."
+  else
+    echo "Warning: $package is not available for linking globally. Skipping..."
+  fi
+done
+
+# Run checks
 npm run lint
 npm run check

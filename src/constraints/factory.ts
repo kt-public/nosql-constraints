@@ -1,41 +1,31 @@
 import _ from 'lodash';
-import { type DeepPartial, type PropertyPaths } from 'typesafe-utilities';
+import { type PropertyPaths, type UnknownStringRecord } from 'typesafe-utilities';
 import { CyclesDFS, DiGraph, EdgeId, GraphPaths } from 'ya-digraph-js';
 import { DocumentSchemaAdapter, DocumentSchemaChunk } from '../adapter/schema';
-
-type RefDocType<TDoc extends Record<string, unknown>> = DeepPartial<TDoc>;
-
-type Vertex = {
-  containerId: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  refDocType?: RefDocType<any>;
-};
-type Edge = {
-  cascadeDelete?: true;
-};
+import { type Edge, type RefDocType, type Vertex } from './types';
 
 type ContainerReference = {
   containerId: string;
 };
 // Constraint document -> document reference
-type DocumentReference<TDoc extends Record<string, unknown>> = ContainerReference & {
+type DocumentReference<TDoc extends UnknownStringRecord> = ContainerReference & {
   refDocType?: RefDocType<TDoc>;
 };
 type Doc2DocConstraint<
-  TReferencing extends Record<string, unknown>,
-  TReferenced extends Record<string, unknown>
+  TReferencing extends UnknownStringRecord,
+  TReferenced extends UnknownStringRecord
 > = Edge & {
   refProperties: Partial<Record<PropertyPaths<TReferencing>, PropertyPaths<TReferenced>>>;
 };
 // Constraint document -> partition reference
-type PartitionReference<TDoc extends Record<string, unknown>> = ContainerReference & {
+type PartitionReference<TDoc extends UnknownStringRecord> = ContainerReference & {
   partitionKeyProperties: PropertyPaths<TDoc>[];
 };
 type PartitionReferenceConstraint<
-  TReferencing extends Record<string, unknown>,
-  TReferenced extends Record<string, unknown>
+  TReferencing extends UnknownStringRecord,
+  TReferenced extends UnknownStringRecord
 > = Doc2DocConstraint<TReferencing, TReferenced>;
-type DocCompoundConstraint<TDoc extends Record<string, unknown>> = Edge & {
+type DocCompoundConstraint<TDoc extends UnknownStringRecord> = Edge & {
   compoundProperties: PropertyPaths<TDoc>[];
 };
 
@@ -64,7 +54,7 @@ export class ConstraintsFactory {
     chunks.push(...newChunks);
   }
 
-  private findDocumentSchemaChunks<TDoc extends Record<string, unknown>>(
+  private findDocumentSchemaChunks<TDoc extends UnknownStringRecord>(
     docRef: DocumentReference<TDoc>
   ): DocumentSchemaChunk[] {
     const { containerId, refDocType } = docRef;
@@ -81,7 +71,7 @@ export class ConstraintsFactory {
     // Helper function to recursively match properties
     const matchProperties = (
       currentChunks: DocumentSchemaChunk[],
-      currentRefDocType: Record<string, unknown>
+      currentRefDocType: UnknownStringRecord
     ): DocumentSchemaChunk[] => {
       const isScalarMatch = (propertyChunks: DocumentSchemaChunk[], refValue: unknown): boolean =>
         propertyChunks.some((propertyChunk) => {
@@ -107,7 +97,7 @@ export class ConstraintsFactory {
           // Drill down recursively for nested objects
           const nestedMatchedChunks = matchProperties(
             propertyChunks,
-            refValue as Record<string, unknown>
+            refValue as UnknownStringRecord
           );
           return nestedMatchedChunks.length > 0;
         }
@@ -129,7 +119,7 @@ export class ConstraintsFactory {
     return result;
   }
 
-  private findPartitionSchemaChunks<TDoc extends Record<string, unknown>>(
+  private findPartitionSchemaChunks<TDoc extends UnknownStringRecord>(
     partitionRef: PartitionReference<TDoc>
   ): DocumentSchemaChunk[] {
     const { containerId } = partitionRef;
@@ -152,7 +142,7 @@ export class ConstraintsFactory {
     return currentChunks;
   }
 
-  private validateDocumentReference<TDoc extends Record<string, unknown>>(
+  private validateDocumentReference<TDoc extends UnknownStringRecord>(
     docRef: DocumentReference<TDoc>
   ): void {
     // Check that vertex has schema
@@ -206,8 +196,8 @@ export class ConstraintsFactory {
   }
 
   private validateDoc2DocConstraint<
-    TReferencing extends Record<string, unknown>,
-    TReferenced extends Record<string, unknown>
+    TReferencing extends UnknownStringRecord,
+    TReferenced extends UnknownStringRecord
   >(
     referencing: DocumentReference<TReferencing>,
     constraint: Doc2DocConstraint<TReferencing, TReferenced>,
@@ -245,8 +235,8 @@ export class ConstraintsFactory {
   }
 
   public addDocument2DocumentConstraint<
-    TReferencing extends Record<string, unknown>,
-    TReferenced extends Record<string, unknown>
+    TReferencing extends UnknownStringRecord,
+    TReferenced extends UnknownStringRecord
   >(
     referencing: DocumentReference<TReferencing>,
     constraint: Doc2DocConstraint<TReferencing, TReferenced>,
@@ -268,7 +258,7 @@ export class ConstraintsFactory {
     this.#constraintsGraph.addEdges({ from, to, edge: constraint });
   }
 
-  private validateDocCompoundConstraint<TDoc extends Record<string, unknown>>(
+  private validateDocCompoundConstraint<TDoc extends UnknownStringRecord>(
     compound: DocumentReference<TDoc>,
     constraint: DocCompoundConstraint<TDoc>
   ): void {
@@ -290,7 +280,7 @@ export class ConstraintsFactory {
     }
   }
 
-  public addDocumentCompoundConstraint<TDoc extends Record<string, unknown>>(
+  public addDocumentCompoundConstraint<TDoc extends UnknownStringRecord>(
     compound: DocumentReference<TDoc>,
     constraint: DocCompoundConstraint<TDoc>
   ): void {
@@ -330,8 +320,8 @@ export class ConstraintsFactory {
   }
 
   private validatePartition2DocConstraint<
-    TReferencing extends Record<string, unknown>,
-    TReferenced extends Record<string, unknown>
+    TReferencing extends UnknownStringRecord,
+    TReferenced extends UnknownStringRecord
   >(
     referencing: PartitionReference<TReferencing>,
     constraint: PartitionReferenceConstraint<TReferencing, TReferenced>,
@@ -382,8 +372,8 @@ export class ConstraintsFactory {
   }
 
   public addPartition2DocumentConstraint<
-    TReferencing extends Record<string, unknown>,
-    TReferenced extends Record<string, unknown>
+    TReferencing extends UnknownStringRecord,
+    TReferenced extends UnknownStringRecord
   >(
     referencing: PartitionReference<TReferencing>,
     constraint: PartitionReferenceConstraint<TReferencing, TReferenced>,
