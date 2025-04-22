@@ -21,6 +21,8 @@ for package in "${link_packages[@]}"; do
 done
 # Link all packages at once, because linking them one by one resets other links: npm link package1 package2 ...
 npm link "${available_packages[@]}"
+echo "Warning: You may need to make sure that the linked packages are released and up to date."
+echo "Warning: While the checks may work locally, they may fail on CI/CD if the linked packages are not released and up to date."
 
 # Run checks
 npm run lint
