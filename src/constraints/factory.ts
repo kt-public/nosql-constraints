@@ -2,6 +2,7 @@ import _ from 'lodash';
 import { type PropertyPaths, type UnknownStringRecord } from 'typesafe-utilities';
 import { CyclesDFS, DiGraph, EdgeId, GraphPaths } from 'ya-digraph-js';
 import { DocumentSchemaAdapter, DocumentSchemaChunk } from '../adapter/schema';
+import { Constraints } from './constraints';
 import { type Edge, type RefDocType, type Vertex } from './types';
 
 type ContainerReference = {
@@ -452,5 +453,11 @@ export class ConstraintsFactory {
         );
       }
     }
+  }
+
+  public build(): Constraints {
+    this.validate();
+    // Prepare data for fast access to the constraints
+    return new Constraints(this.#constraintsGraph);
   }
 }
