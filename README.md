@@ -11,6 +11,8 @@ Helpers to manage constrants (i.e. cascade delete) in a NoSQL database
 
 **in progress, expect breaking changes**
 
+**README file may not be up to date with the functionality, [refer to the test files](https://github.com/kt-public/nosql-constraints/blob/main/tests/constraints/constraints.spec.ts)**
+
 # Supported schema packages
 
 - zod
