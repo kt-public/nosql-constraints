@@ -20,17 +20,19 @@ Helpers to manage constrants (i.e. cascade delete) in a NoSQL database
 ## zod
 
 ```ts
+import { UnknownStringRecord } from 'typesafe-utilities';
 import { describe, it } from 'vitest';
 import { z } from 'zod';
-import { ConstraintsFactory, zod } from 'nosql-constraints';
+import { ConstraintPathElement, ConstraintsFactory, zod } from '../../src/index';
 
-const container1DocSchema1 = z.object({
+const container1Doc1Schema = z.object({
   id: z.string(),
   type: z.literal('C1A'),
   name: z.string(),
   age: z.number()
 });
-const container1DocSchema2 = z.object({
+type Container1Doc1 = z.infer<typeof container1Doc1Schema>;
+const container1Doc2Schema = z.object({
   id: z.string(),
   type: z.literal('C1B'),
   firstname: z.string(),
@@ -38,11 +40,14 @@ const container1DocSchema2 = z.object({
   email: z.string(),
   childrenRefIds: z.array(z.string())
 });
+type Container1Doc2 = z.infer<typeof container1Doc2Schema>;
 const container1DocSchema = z.discriminatedUnion('type', [
-  container1DocSchema1,
-  container1DocSchema2
+  container1Doc1Schema,
+  container1Doc2Schema
 ]);
-const container2DocSchema1 = z.object({
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+type Container1Doc = z.infer<typeof container1DocSchema>;
+const container2Doc1Schema = z.object({
   id: z.string(),
   type: z.literal('C2A'),
   title: z.string(),
@@ -52,7 +57,8 @@ const container2DocSchema1 = z.object({
     someBuddyId: z.string()
   })
 });
-const container2DocSchema2 = z.object({
+type Container2Doc1 = z.infer<typeof container2Doc1Schema>;
+const container2Doc2Schema = z.object({
   id: z.string(),
   type: z.literal('C2B'),
   title: z.string(),
@@ -62,7 +68,8 @@ const container2DocSchema2 = z.object({
     someBuddyId: z.string()
   })
 });
-const container2DocSchema3 = z.object({
+type Container2Doc2 = z.infer<typeof container2Doc2Schema>;
+const container2Doc3Schema = z.object({
   id: z.string(),
   type: z.literal('C2C'),
   title: z.string(),
@@ -78,219 +85,99 @@ const container2DocSchema3 = z.object({
   }),
   compoundId: z.string()
 });
+type Container2Doc3 = z.infer<typeof container2Doc3Schema>;
 const container2DocSchema = z.discriminatedUnion('type', [
-  container2DocSchema1,
-  container2DocSchema2,
-  container2DocSchema3
+  container2Doc1Schema,
+  container2Doc2Schema,
+  container2Doc3Schema
 ]);
+type Container2Doc = z.infer<typeof container2DocSchema>;
 
 const testCaseSchemas = {
   container1: container1DocSchema,
   container2: container2DocSchema
 };
 
+type _ConstraintPathElement = ConstraintPathElement<UnknownStringRecord, UnknownStringRecord>;
+
 const factory = new ConstraintsFactory();
 factory.addDocumentSchema('container1', zod(testCaseSchemas.container1));
 factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
 ```
 
-## Adding constraints
+## Adding and building constraints
 
 ```ts
-it('should be able to add: container2/doc1.buddyId -> container1/doc1.id', () => {
+function buildConstraints() {
   const factory = new ConstraintsFactory();
   factory.addDocumentSchema('container1', zod(testCaseSchemas.container1));
   factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
-  factory.addDocument2DocumentConstraint(
+  factory.addConstraint<Container2Doc1, Container1Doc1>(
+    // Referencing document
     { containerId: 'container2', refDocType: { type: 'C2A' } },
+    // Constraint details with mapping of properties (referencing.buddyId -> referenced.id)
     { refProperties: { buddyId: 'id' }, cascadeDelete: true },
+    // Referenced document
     { containerId: 'container1', refDocType: { type: 'C1A' } }
   );
-});
-
-it('should be able to add: container2/doc2.buddyIds -> container1/doc1.id', () => {
-  const factory = new ConstraintsFactory();
-  factory.addDocumentSchema('container1', zod(testCaseSchemas.container1));
-  factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
-  factory.addDocument2DocumentConstraint(
-    { containerId: 'container2', refDocType: { type: 'C2B' } },
-    { refProperties: { 'buddyIds[]': 'id' }, cascadeDelete: true },
-    { containerId: 'container1', refDocType: { type: 'C1A' } }
-  );
-});
-
-it('should be able to add: container2/doc3.parents[].parentId -> container1/doc1.id', () => {
-  const factory = new ConstraintsFactory();
-  factory.addDocumentSchema('container1', zod(testCaseSchemas.container1));
-  factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
-  factory.addDocument2DocumentConstraint(
-    { containerId: 'container2', refDocType: { type: 'C2C' } },
-    { refProperties: { 'parents[].parentId': 'id' }, cascadeDelete: true },
-    { containerId: 'container1', refDocType: { type: 'C1A' } }
-  );
-});
-
-it('should be able to add: container2/["somePartitionKey.someBuddyId"] -> container1/doc1.id', () => {
-  const factory = new ConstraintsFactory();
-  factory.addDocumentSchema('container1', zod(testCaseSchemas.container1));
-  factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
-  factory.addPartition2DocumentConstraint(
-    { containerId: 'container2', partitionKeyProperties: ['somePartitionKey.someBuddyId'] },
-    { refProperties: { 'somePartitionKey.someBuddyId': 'id' }, cascadeDelete: true },
-    { containerId: 'container1', refDocType: { type: 'C1A' } }
-  );
-});
-
-it('should be able to add compound: container2/doc3.compoundId -> container2/doc3.compoundId', () => {
-  const factory = new ConstraintsFactory();
-  factory.addDocumentSchema('container1', zod(testCaseSchemas.container1));
-  factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
-  factory.addDocumentCompoundConstraint(
-    { containerId: 'container2', refDocType: { type: 'C2C' } },
-    { compoundProperties: ['compoundId'], cascadeDelete: true }
-  );
-});
-```
-
-## Building and using constraints
-
-```ts
-it('should be able to validate cascade delete: container2/doc1.buddyId -> container1/doc1.id -> container1/doc2.id -> container2/doc2.id', ({
-  expect
-}) => {
-  const factory = new ConstraintsFactory();
-  factory.addDocumentSchema('container1', zod(testCaseSchemas.container1));
-  factory.addDocumentSchema('container2', zod(testCaseSchemas.container2));
-  factory.addDocument2DocumentConstraint<Container2Doc1, Container1Doc1>(
-    { containerId: 'container2', refDocType: { type: 'C2A' } },
-    { refProperties: { buddyId: 'id' }, cascadeDelete: true },
-    { containerId: 'container1', refDocType: { type: 'C1A' } }
-  );
-  factory.addDocument2DocumentConstraint<Container2Doc3, Container1Doc1>(
+  factory.addConstraint<Container2Doc3, Container1Doc1>(
     { containerId: 'container2', refDocType: { type: 'C2C' } },
     { refProperties: { id: 'id' }, cascadeDelete: true },
     { containerId: 'container1', refDocType: { type: 'C1A' } }
   );
-  factory.addDocument2CompoundConstraint<Container2Doc3>(
+  factory.addCompoundConstraint<Container2Doc3>(
     { containerId: 'container2', refDocType: { type: 'C2C' } },
-    { compoundProperties: ['compoundId'], cascadeDelete: true }
+    {
+      refProperties: {
+        compoundId: 'id'
+      },
+      cascadeDelete: true
+    }
   );
-  factory.addPartition2DocumentConstraint<Container2Doc, Container1Doc1>(
-    { containerId: 'container2', partitionKeyProperties: ['somePartitionKey.someBuddyId'] },
+  factory.addConstraint<Container2Doc, Container1Doc1>(
+    { containerId: 'container2' },
     { refProperties: { 'somePartitionKey.someBuddyId': 'id' }, cascadeDelete: true },
     { containerId: 'container1', refDocType: { type: 'C1A' } }
   );
-  factory.addDocument2DocumentConstraint<Container1Doc1, Container1Doc2>(
+  factory.addConstraint<Container1Doc1, Container1Doc2>(
     { containerId: 'container1', refDocType: { type: 'C1A' } },
     { refProperties: { id: 'id' }, cascadeDelete: true },
     { containerId: 'container1', refDocType: { type: 'C1B' } }
   );
-  factory.addDocument2DocumentConstraint<Container1Doc2, Container2Doc2>(
+  factory.addConstraint<Container1Doc2, Container2Doc2>(
     { containerId: 'container1', refDocType: { type: 'C1B' } },
-    { refProperties: { id: 'id' }, cascadeDelete: true },
+    { refProperties: { id: 'id' } },
     { containerId: 'container2', refDocType: { type: 'C2B' } }
   );
+  // This will also validate constraints
+  // Currently:
+  //    A graph of constraints (referenced -> referencing) must not have cycles
+  //    a constraint that have cascadeDelete = true, must have all following children with cascade delete = true
+  //      otherwise an exception is thrown
   const constraints = factory.build();
-  expect(constraints).toBeDefined();
-  let directConstraints = constraints.getDirectDocumentConstraints<Container1Doc1>('container1', {
-    type: 'C1A'
-  });
-  let expectedConstraints: _ConstraintPathElement[] = [
-    {
-      to: {
-        id: 'container2/{"type":"C2A"}',
-        vertex: {
-          type: 'document',
-          containerId: 'container2',
-          refDocType: {
-            type: 'C2A'
-          }
-        }
-      },
-      edge: {
-        from: 'container1/{"type":"C1A"}',
-        to: 'container2/{"type":"C2A"}',
-        edge: {
-          type: 'doc2doc',
-          refProperties: {
-            buddyId: 'id'
-          },
-          cascadeDelete: true
-        }
-      }
-    },
-    {
-      to: {
-        id: 'container2/{"type":"C2C"}',
-        vertex: {
-          type: 'document',
-          containerId: 'container2',
-          refDocType: {
-            type: 'C2C'
-          }
-        }
-      },
-      edge: {
-        from: 'container1/{"type":"C1A"}',
-        to: 'container2/{"type":"C2C"}',
-        edge: {
-          type: 'doc2doc',
-          refProperties: {
-            id: 'id'
-          },
-          cascadeDelete: true
-        }
-      }
-    },
-    {
-      to: {
-        id: 'container2/["somePartitionKey.someBuddyId"]',
-        vertex: {
-          type: 'partition',
-          containerId: 'container2',
-          partitionKeyProperties: ['somePartitionKey.someBuddyId']
-        }
-      },
-      edge: {
-        from: 'container1/{"type":"C1A"}',
-        to: 'container2/["somePartitionKey.someBuddyId"]',
-        edge: {
-          type: 'partition2doc',
-          refProperties: {
-            'somePartitionKey.someBuddyId': 'id'
-          },
-          cascadeDelete: true
-        }
-      }
-    }
-  ];
-  expect(directConstraints).toEqual(expectedConstraints);
-  directConstraints = constraints.getDirectDocumentConstraints<Container2Doc>('container2', {
-    type: 'C2C'
-  });
-  expectedConstraints = [
-    {
-      to: {
-        id: 'container2/{"type":"C2C"}/compound',
-        vertex: {
-          type: 'document',
-          containerId: 'container2',
-          refDocType: {
-            type: 'C2C'
-          }
-        }
-      },
-      edge: {
-        from: 'container2/{"type":"C2C"}',
-        to: 'container2/{"type":"C2C"}/compound',
-        edge: {
-          type: 'compound',
-          compoundProperties: ['compoundId'],
-          cascadeDelete: true
-        }
-      }
-    }
-  ];
-  expect(directConstraints).toEqual(expectedConstraints);
+  return constraints;
+}
+```
+
+## Querying constraints
+
+```ts
+// All direct constraints from the document (referenced) to other documents (referencing)
+let directConstraints = constraints.getDirectCascadeDeleteConstraints<Container2Doc>('container2', {
+  type: 'C2C'
 });
+// All direct constraints from the document (referenced) to other documents (referencing) that have cascade delete = true
+let directConstraints = constraints.getDirectCascadeDeleteConstraints<Container1Doc1>(
+  'container1',
+  {
+    type: 'C1A'
+  }
+);
+// All direct constraints from the document (referenced) to other documents (referencing) that have cascade delete = false/undefined
+let directConstraints = constraints.getDirectCascadeDeleteConstraints<Container1Doc1>(
+  'container1',
+  {
+    type: 'C1A'
+  }
+);
 ```
