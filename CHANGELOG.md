@@ -1,5 +1,16 @@
 # nosql-constraints
 
+## 0.2.0
+
+### Minor Changes
+
+- 029abe1: The next minor release with breaking changes
+  - Breaking changes
+    - some methods are reworked and renamed
+  - Improvements
+    - better tests
+    - fixed: issue with invalid cascade delete paths
+
 ## 0.1.0
 
 ### Minor Changes
