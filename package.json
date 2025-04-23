@@ -67,7 +67,7 @@
     "safe-stable-stringify": "^2.5.0",
     "type-fest": "^4.40.0",
     "typesafe-utilities": "^0.x",
-    "ya-digraph-js": "^0.2.0"
+    "ya-digraph-js": "^0.x"
   },
   "engines": {
     "node": ">=20.0.0"
