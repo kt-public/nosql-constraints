@@ -1,75 +1,75 @@
 {
-  "name": "nosql-constraints",
-  "description": "Helpers to manage constrants (i.e. cascade delete) in a NoSQL database",
-  "version": "0.2.1",
-  "license": "MIT",
-  "author": {
-    "name": "Konstantin Tarmyshov",
-    "email": "k.tarmyshov@googlemail.com"
-  },
-  "keywords": [
-    "nosql",
-    "constraints",
-    "cascade-delete"
-  ],
-  "homepage": "https://github.com/kt-public/nosql-constraints",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/kt-public/nosql-constraints.git"
-  },
-  "scripts": {
-    "build": "rimraf ./dist && tsc --project tsconfig.json && npm run prepack",
-    "build:release": "rimraf ./dist && tsc --project tsconfig-release.json && npm run prepack",
-    "prepare": "bash ./scripts/npm-link.sh",
-    "prepack": "publint",
-    "format": "prettier --write .",
-    "lint": "prettier --check . && eslint .",
-    "check": "tsc --skipLibCheck",
-    "test": "tsc --project tsconfig-test.json --skipLibCheck && vitest run",
-    "coverage": "vitest run --coverage",
-    "changeset:version": "changeset version && git add --all",
-    "changeset:publish": "changeset publish"
-  },
-  "files": [
-    "dist",
-    "!dist/**/*.test.*",
-    "!dist/**/*.spec.*",
-    "!tests"
-  ],
-  "type": "module",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "default": "./dist/index.js"
-    }
-  },
-  "devDependencies": {
-    "@changesets/cli": "^2.28.1",
-    "@eslint/compat": "^1.2.7",
-    "@types/lodash": "^4.17.16",
-    "@types/node": "^22.13.10",
-    "@vitest/coverage-istanbul": "^3.1.1",
-    "@vitest/coverage-v8": "^3.1.1",
-    "eslint": "^9.22.0",
-    "eslint-config-prettier": "^10.1.1",
-    "prettier": "^3.5.3",
-    "publint": "^0.3.9",
-    "rimraf": "^6.0.1",
-    "typescript": "^5.8.2",
-    "typescript-eslint": "^8.26.1",
-    "vitest": "^3.0.8",
-    "zod": "^3.24.2"
-  },
-  "dependencies": {
-    "lodash": "^4.17.21",
-    "safe-stable-stringify": "^2.5.0",
-    "type-fest": "^4.40.0",
-    "typesafe-utilities": "^0.x",
-    "ya-digraph-js": "^0.x"
-  },
-  "engines": {
-    "node": ">=20.0.0"
-  }
+	"name": "nosql-constraints",
+	"description": "Helpers to manage constrants (i.e. cascade delete) in a NoSQL database",
+	"version": "0.2.1",
+	"license": "MIT",
+	"author": {
+		"name": "Konstantin Tarmyshov",
+		"email": "k.tarmyshov@googlemail.com"
+	},
+	"keywords": [
+		"nosql",
+		"constraints",
+		"cascade-delete"
+	],
+	"homepage": "https://github.com/kt-public/nosql-constraints",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/kt-public/nosql-constraints.git"
+	},
+	"scripts": {
+		"build": "rimraf ./dist && tsc --project tsconfig.json && npm run prepack",
+		"build:release": "rimraf ./dist && tsc --project tsconfig-release.json && npm run prepack",
+		"prepare": "bash ./scripts/npm-link.sh",
+		"prepack": "publint",
+		"format": "prettier --write .",
+		"lint": "prettier --check . && eslint .",
+		"check": "tsc --skipLibCheck",
+		"test": "tsc --project tsconfig-test.json --skipLibCheck && vitest run",
+		"coverage": "vitest run --coverage",
+		"changeset:version": "changeset version && git add --all",
+		"changeset:publish": "changeset publish"
+	},
+	"files": [
+		"dist",
+		"!dist/**/*.test.*",
+		"!dist/**/*.spec.*",
+		"!tests"
+	],
+	"type": "module",
+	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js",
+			"default": "./dist/index.js"
+		}
+	},
+	"devDependencies": {
+		"@changesets/cli": "^2.28.1",
+		"@eslint/compat": "^1.2.7",
+		"@types/lodash": "^4.17.16",
+		"@types/node": "^22.13.10",
+		"@vitest/coverage-istanbul": "^3.1.1",
+		"@vitest/coverage-v8": "^3.1.1",
+		"eslint": "^9.22.0",
+		"eslint-config-prettier": "^10.1.1",
+		"prettier": "^3.5.3",
+		"publint": "^0.3.9",
+		"rimraf": "^6.0.1",
+		"typescript": "^5.8.2",
+		"typescript-eslint": "^8.26.1",
+		"vitest": "^3.0.8",
+		"zod": "^3.24.2"
+	},
+	"dependencies": {
+		"lodash": "^4.17.21",
+		"safe-stable-stringify": "^2.5.0",
+		"type-fest": "^4.40.0",
+		"typesafe-utilities": "^0.x",
+		"ya-digraph-js": "^0.x"
+	},
+	"engines": {
+		"node": ">=20.0.0"
+	}
 }
