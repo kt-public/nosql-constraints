@@ -110,7 +110,9 @@ function extractChunks(
     );
     return [chunkPropertyKey, chunkPropertyValue];
   } else {
-    throw new Error(`Unsupported schema type: ${schema.constructor.name}`);
+    throw new Error(
+      `Unsupported schema type: ${schema.constructor.name} at ${propertyPath} with key ${propertyKey}`
+    );
   }
 }
 
