@@ -2,4 +2,4 @@
 'nosql-constraints': minor
 ---
 
-breaking: rename add constraints methods
+breaking: rename different methods
