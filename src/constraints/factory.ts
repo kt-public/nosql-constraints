@@ -285,7 +285,7 @@ export class ConstraintsFactory {
         continue;
       }
       // Check that all paths have cascadeDelete = true down to the leaves
-      const cascadeDeletePaths = allPaths.map((path) => {
+      const cascadeDeletePathsEdges = allPaths.map((path) => {
         const pathEdgeIds = path
           .map((vertexId, index) => {
             if (index === 0) {
@@ -295,18 +295,42 @@ export class ConstraintsFactory {
           })
           .filter((e) => e !== undefined);
         const cascadeDeleteEdges = pathEdgeIds.map(
-          (edgeId) => this.#constraintsGraph.getEdge(edgeId)?.cascadeDelete
+          (edgeId) => this.#constraintsGraph.getEdge(edgeId)?.cascadeDelete ?? false
         );
-        return cascadeDeleteEdges.every((e) => e === true);
+        return cascadeDeleteEdges;
       });
+      const cascadeDeletePaths = cascadeDeletePathsEdges.map((edges) =>
+        edges.every((e) => e === true)
+      );
       // Check that all edges in the path have cascadeDelete = true
       const allCascadeDelete = cascadeDeletePaths.every((e) => e === true);
       if (!allCascadeDelete) {
         // Find paths that are not cascadeDelete
         const invalidPaths = allPaths
-          .filter((_, index) => cascadeDeletePaths[index])
-          .map((path) => [edgeId.from, ...path]);
-        const pathStrings = invalidPaths.map((path) => path.join(' -> '));
+          .map((path, index) => [path, index] as [string[], number])
+          .filter((_, index) => cascadeDeletePaths[index] !== true)
+          .map(
+            ([path, pathIndex]) =>
+              [
+                [edgeId.from, edge.cascadeDelete ?? false],
+                ...path.map((v, vertexIndex) => [
+                  v,
+                  cascadeDeletePathsEdges[pathIndex].length > vertexIndex
+                    ? cascadeDeletePathsEdges[pathIndex][vertexIndex]
+                    : undefined
+                ])
+              ] as [string, boolean | undefined][]
+          );
+        const pathStrings = invalidPaths.map((path) =>
+          path
+            .map((e) => {
+              if (e[1] === undefined) {
+                return `${e[0]}`;
+              }
+              return `${e[0]}: delete=${e[1]}`;
+            })
+            .join(' -> ')
+        );
         throw new Error(
           `Validation failed: cascadeDelete = true is not set for all edges in the path(s): ${pathStrings.join(
             ', '

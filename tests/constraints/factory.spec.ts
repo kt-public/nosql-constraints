@@ -378,7 +378,7 @@ describe('Constraint factory', () => {
         { containerId: 'container2', refDocType: { type: 'C2B' } }
       );
       expect(() => factory.validate()).toThrowError(
-        'Validation failed: cascadeDelete = true is not set for all edges in the path(s): container1/{"type":"C1B"} -> container1/{"type":"C1A"} -> container2/{"type":"C2A"}. All edges in the path(s) must have cascadeDelete = true.'
+        'Validation failed: cascadeDelete = true is not set for all edges in the path(s): container1/{"type":"C1B"}: delete=true -> container1/{"type":"C1A"}: delete=false -> container2/{"type":"C2C"}. All edges in the path(s) must have cascadeDelete = true.'
       );
     });
   });

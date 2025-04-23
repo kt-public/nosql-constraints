@@ -7,7 +7,11 @@ describe('Zod Adapter implementation', () => {
     it('should be able to extract simple ZodObject', () => {
       const schema = z.object({
         name: z.string(),
-        age: z.number()
+        age: z.number().optional(),
+        someEnum: z
+          .enum(['A', 'B', 'C'])
+          .default('A')
+          .transform((val) => val)
       });
       const adapter = zod(schema);
       const chunks = adapter.extractChunks();
@@ -17,7 +21,15 @@ describe('Zod Adapter implementation', () => {
           type: 'object',
           properties: {
             name: [{ path: 'name', type: 'string' }],
-            age: [{ path: 'age', type: 'number' }]
+            age: [{ path: 'age', type: 'number', optional: true }],
+            someEnum: [
+              {
+                path: 'someEnum',
+                type: 'enum',
+                value: ['A', 'B', 'C'],
+                default: 'A'
+              }
+            ]
           }
         }
       ]);
@@ -57,7 +69,8 @@ describe('Zod Adapter implementation', () => {
         z.object({
           type: z.literal('A'),
           name: z.string(),
-          age: z.number()
+          age: z.number(),
+          someArray: z.string().array()
         }),
         z.object({
           type: z.literal('B'),
@@ -75,7 +88,13 @@ describe('Zod Adapter implementation', () => {
           properties: {
             type: [{ path: 'type', type: 'literal', value: 'A' }],
             name: [{ path: 'name', type: 'string' }],
-            age: [{ path: 'age', type: 'number' }]
+            age: [{ path: 'age', type: 'number' }],
+            'someArray[]': [
+              {
+                path: 'someArray[]',
+                type: 'string'
+              }
+            ]
           }
         },
         {
