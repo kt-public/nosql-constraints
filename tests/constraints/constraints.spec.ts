@@ -1,4 +1,4 @@
-import { UnknownStringRecord } from 'typesafe-utilities';
+import { UnknownStringRecord } from '@ktarmyshov/typesafe-utilities';
 import { describe, it } from 'vitest';
 import { z } from 'zod';
 import { ConstraintPathElement, ConstraintsFactory, zod } from '../../src/index';

@@ -1,6 +1,6 @@
+import { VertexWithId } from '@ktarmyshov/digraph-js';
+import { PropertyPaths, UnknownStringRecord } from '@ktarmyshov/typesafe-utilities';
 import { PartialDeep } from 'type-fest';
-import { PropertyPaths, UnknownStringRecord } from 'typesafe-utilities';
-import { VertexWithId } from 'ya-digraph-js';
 
 // Types for vertices in the constraints graph
 export type RefDocType<TDoc extends UnknownStringRecord> = PartialDeep<TDoc>;

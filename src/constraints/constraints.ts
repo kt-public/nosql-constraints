@@ -1,6 +1,6 @@
+import { IDiGraph } from '@ktarmyshov/digraph-js';
+import { UnknownStringRecord } from '@ktarmyshov/typesafe-utilities';
 import _ from 'lodash';
-import { UnknownStringRecord } from 'typesafe-utilities';
-import { IDiGraph } from 'ya-digraph-js';
 import {
 	Constraint,
 	ConstraintPathElement,
