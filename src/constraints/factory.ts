@@ -1,6 +1,6 @@
+import { CyclesDFS, DiGraph, EdgeId, GraphPaths, IDiGraph } from '@ktarmyshov/digraph-js';
+import { type PropertyPaths, type UnknownStringRecord } from '@ktarmyshov/typesafe-utilities';
 import stringify from 'safe-stable-stringify';
-import { type PropertyPaths, type UnknownStringRecord } from 'typesafe-utilities';
-import { CyclesDFS, DiGraph, EdgeId, GraphPaths, IDiGraph } from 'ya-digraph-js';
 import { DocumentSchemaAdapter, DocumentSchemaChunk } from '../adapter/schema';
 import { Constraints } from './constraints.js';
 import {

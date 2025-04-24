@@ -1,5 +1,5 @@
 {
-	"name": "nosql-constraints",
+	"name": "@ktarmyshov/nosql-constraints",
 	"description": "Helpers to manage constrants (i.e. cascade delete) in a NoSQL database",
 	"version": "0.2.1",
 	"license": "MIT",
@@ -67,8 +67,8 @@
 		"lodash": "^4.17.21",
 		"safe-stable-stringify": "^2.5.0",
 		"type-fest": "^4.40.0",
-		"typesafe-utilities": "^0.x",
-		"ya-digraph-js": "^0.x"
+		"@ktarmyshov/typesafe-utilities": "^0.x",
+		"@ktarmyshov/digraph-js": "^0.x"
 	},
 	"engines": {
 		"node": ">=20.0.0"

@@ -1,4 +1,4 @@
-# nosql-constraints
+# @ktarmyshov/nosql-constraints
 
 ## 0.2.1
 
