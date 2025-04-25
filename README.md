@@ -1,3 +1,4 @@
+[![NPM Version](https://img.shields.io/npm/v/%40ktarmyshov%2Fnosql-constraints)](https://www.npmjs.com/package/@ktarmyshov/nosql-constraints)
 [![CI](https://github.com/kt-public/nosql-constraints/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/kt-public/nosql-constraints/actions/workflows/ci.yml)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=kt-public_nosql-constraints&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=kt-public_nosql-constraints)
 [![Bugs](https://sonarcloud.io/api/project_badges/measure?project=kt-public_nosql-constraints&metric=bugs)](https://sonarcloud.io/summary/new_code?id=kt-public_nosql-constraints)
