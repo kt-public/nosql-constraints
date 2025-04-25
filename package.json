@@ -12,10 +12,10 @@
 		"constraints",
 		"cascade-delete"
 	],
-	"homepage": "https://github.com/kt-public/nosql-constraints",
+	"homepage": "https://github.com/kt-npm-modules/nosql-constraints",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/kt-public/nosql-constraints.git"
+		"url": "git+https://github.com/kt-npm-modules/nosql-constraints.git"
 	},
 	"scripts": {
 		"build": "rimraf ./dist && tsc --project tsconfig.json && npm run prepack",
