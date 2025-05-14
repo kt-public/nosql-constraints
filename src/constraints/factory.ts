@@ -360,10 +360,10 @@ export class ConstraintsFactory {
 					})
 					.filter((e) => e !== undefined);
 				return pathEdgeIds.map((edgeId) => ({
-					fromId: edgeId.from,
-					toId: edgeId.to,
-					from: this.#constraintsGraph.getVertex(edgeId.from)!,
-					to: this.#constraintsGraph.getVertex(edgeId.to)!,
+					referencedId: edgeId.from,
+					referencingId: edgeId.to,
+					referenced: this.#constraintsGraph.getVertex(edgeId.from)!,
+					referencing: this.#constraintsGraph.getVertex(edgeId.to)!,
 					constraint: this.#constraintsGraph.getEdge(edgeId)!
 				}));
 			});

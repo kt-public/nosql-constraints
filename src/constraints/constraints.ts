@@ -38,7 +38,7 @@ export class Constraints {
 			) {
 				for (const path of paths) {
 					if (path.length > 0) {
-						const edgeId = `${path[0].fromId} -> ${path[0].toId}`;
+						const edgeId = `${path[0].referencedId} -> ${path[0].referencingId}`;
 						if (
 							!constraintEdgesSet.has(edgeId) &&
 							(cascadeDelete === undefined ||

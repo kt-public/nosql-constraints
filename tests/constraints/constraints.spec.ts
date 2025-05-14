@@ -130,15 +130,15 @@ describe('Constraints', () => {
 			});
 			let expectedConstraints: _ConstraintPathElement[] = [
 				{
-					fromId: 'container1/{"type":"C1A"}',
-					toId: 'container2/{"type":"C2A"}',
-					from: {
+					referencedId: 'container1/{"type":"C1A"}',
+					referencingId: 'container2/{"type":"C2A"}',
+					referenced: {
 						containerId: 'container1',
 						refDocType: {
 							type: 'C1A'
 						}
 					},
-					to: {
+					referencing: {
 						containerId: 'container2',
 						refDocType: {
 							type: 'C2A'
@@ -152,15 +152,15 @@ describe('Constraints', () => {
 					}
 				},
 				{
-					fromId: 'container1/{"type":"C1A"}',
-					toId: 'container2/{"type":"C2C"}',
-					from: {
+					referencedId: 'container1/{"type":"C1A"}',
+					referencingId: 'container2/{"type":"C2C"}',
+					referenced: {
 						containerId: 'container1',
 						refDocType: {
 							type: 'C1A'
 						}
 					},
-					to: {
+					referencing: {
 						containerId: 'container2',
 						refDocType: {
 							type: 'C2C'
@@ -174,15 +174,15 @@ describe('Constraints', () => {
 					}
 				},
 				{
-					fromId: 'container1/{"type":"C1A"}',
-					toId: 'container2/undefined',
-					from: {
+					referencedId: 'container1/{"type":"C1A"}',
+					referencingId: 'container2/undefined',
+					referenced: {
 						containerId: 'container1',
 						refDocType: {
 							type: 'C1A'
 						}
 					},
-					to: {
+					referencing: {
 						containerId: 'container2'
 					},
 					constraint: {
@@ -199,15 +199,15 @@ describe('Constraints', () => {
 			});
 			expectedConstraints = [
 				{
-					fromId: 'container2/{"type":"C2C"}',
-					toId: 'container2/{"type":"C2C"}/compound',
-					from: {
+					referencedId: 'container2/{"type":"C2C"}',
+					referencingId: 'container2/{"type":"C2C"}/compound',
+					referenced: {
 						containerId: 'container2',
 						refDocType: {
 							type: 'C2C'
 						}
 					},
-					to: {
+					referencing: {
 						containerId: 'container2',
 						refDocType: {
 							type: 'C2C'
@@ -237,15 +237,15 @@ describe('Constraints', () => {
 			);
 			let expectedConstraints: _ConstraintPathElement[] = [
 				{
-					fromId: 'container1/{"type":"C1A"}',
-					toId: 'container2/{"type":"C2A"}',
-					from: {
+					referencedId: 'container1/{"type":"C1A"}',
+					referencingId: 'container2/{"type":"C2A"}',
+					referenced: {
 						containerId: 'container1',
 						refDocType: {
 							type: 'C1A'
 						}
 					},
-					to: {
+					referencing: {
 						containerId: 'container2',
 						refDocType: {
 							type: 'C2A'
@@ -259,15 +259,15 @@ describe('Constraints', () => {
 					}
 				},
 				{
-					fromId: 'container1/{"type":"C1A"}',
-					toId: 'container2/{"type":"C2C"}',
-					from: {
+					referencedId: 'container1/{"type":"C1A"}',
+					referencingId: 'container2/{"type":"C2C"}',
+					referenced: {
 						containerId: 'container1',
 						refDocType: {
 							type: 'C1A'
 						}
 					},
-					to: {
+					referencing: {
 						containerId: 'container2',
 						refDocType: {
 							type: 'C2C'
@@ -281,15 +281,15 @@ describe('Constraints', () => {
 					}
 				},
 				{
-					fromId: 'container1/{"type":"C1A"}',
-					toId: 'container2/undefined',
-					from: {
+					referencedId: 'container1/{"type":"C1A"}',
+					referencingId: 'container2/undefined',
+					referenced: {
 						containerId: 'container1',
 						refDocType: {
 							type: 'C1A'
 						}
 					},
-					to: {
+					referencing: {
 						containerId: 'container2'
 					},
 					constraint: {
@@ -309,15 +309,15 @@ describe('Constraints', () => {
 			);
 			expectedConstraints = [
 				{
-					fromId: 'container2/{"type":"C2C"}',
-					toId: 'container2/{"type":"C2C"}/compound',
-					from: {
+					referencedId: 'container2/{"type":"C2C"}',
+					referencingId: 'container2/{"type":"C2C"}/compound',
+					referenced: {
 						containerId: 'container2',
 						refDocType: {
 							type: 'C2C'
 						}
 					},
-					to: {
+					referencing: {
 						containerId: 'container2',
 						refDocType: {
 							type: 'C2C'
@@ -356,15 +356,15 @@ describe('Constraints', () => {
 			);
 			let expectedConstraints: _ConstraintPathElement[] = [
 				{
-					fromId: 'container1/{"type":"C1A"}',
-					toId: 'container2/{"type":"C2A"}',
-					from: {
+					referencedId: 'container1/{"type":"C1A"}',
+					referencingId: 'container2/{"type":"C2A"}',
+					referenced: {
 						containerId: 'container1',
 						refDocType: {
 							type: 'C1A'
 						}
 					},
-					to: {
+					referencing: {
 						containerId: 'container2',
 						refDocType: {
 							type: 'C2A'
@@ -378,15 +378,15 @@ describe('Constraints', () => {
 					}
 				},
 				{
-					fromId: 'container1/{"type":"C1A"}',
-					toId: 'container2/{"type":"C2C"}',
-					from: {
+					referencedId: 'container1/{"type":"C1A"}',
+					referencingId: 'container2/{"type":"C2C"}',
+					referenced: {
 						containerId: 'container1',
 						refDocType: {
 							type: 'C1A'
 						}
 					},
-					to: {
+					referencing: {
 						containerId: 'container2',
 						refDocType: {
 							type: 'C2C'
@@ -400,15 +400,15 @@ describe('Constraints', () => {
 					}
 				},
 				{
-					fromId: 'container1/{"type":"C1A"}',
-					toId: 'container2/undefined',
-					from: {
+					referencedId: 'container1/{"type":"C1A"}',
+					referencingId: 'container2/undefined',
+					referenced: {
 						containerId: 'container1',
 						refDocType: {
 							type: 'C1A'
 						}
 					},
-					to: {
+					referencing: {
 						containerId: 'container2'
 					},
 					constraint: {
@@ -440,15 +440,15 @@ describe('Constraints', () => {
 			);
 			expectedConstraints = [
 				{
-					fromId: 'container2/{"type":"C2B"}',
-					toId: 'container1/{"type":"C1B"}',
-					from: {
+					referencedId: 'container2/{"type":"C2B"}',
+					referencingId: 'container1/{"type":"C1B"}',
+					referenced: {
 						containerId: 'container2',
 						refDocType: {
 							type: 'C2B'
 						}
 					},
-					to: {
+					referencing: {
 						containerId: 'container1',
 						refDocType: {
 							type: 'C1B'

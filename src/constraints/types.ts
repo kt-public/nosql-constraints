@@ -26,9 +26,9 @@ export type ConstraintPathElement<
 	TReferencing extends UnknownStringRecord,
 	TReferenced extends UnknownStringRecord
 > = {
-	fromId: string;
-	toId: string;
-	from: DocumentReference<TReferenced>;
-	to: DocumentReference<TReferencing>;
+	referencedId: string;
+	referencingId: string;
+	referenced: DocumentReference<TReferenced>;
+	referencing: DocumentReference<TReferencing>;
 	constraint: Constraint<TReferenced, TReferencing>;
 };
