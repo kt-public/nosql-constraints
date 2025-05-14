@@ -1,5 +1,34 @@
 # @ktarmyshov/nosql-constraints
 
+## 0.3.0
+
+### Minor Changes
+
+- 0405324: Changed interface of the ConstraintPathElement
+
+### Patch Changes
+
+- e851deb: dependabot: directory '/', update @eslint/compat
+- e851deb: dependabot: directory '/', update @ktarmyshov/digraph-js
+- e851deb: dependabot: directory '/', update @ktarmyshov/typesafe-utilities
+- 0967fee: dependabot: directory '/', update eslint
+- 5c9f8c1: dependabot: directory '/', update zod
+- 0dbee76: dependabot: directory '/', update @changesets/cli
+- 0dbee76: dependabot: directory '/', update @types/node
+- 0dbee76: dependabot: directory '/', update @vitest/coverage-istanbul
+- 0dbee76: dependabot: directory '/', update @vitest/coverage-v8
+- 0dbee76: dependabot: directory '/', update typescript-eslint
+- 0dbee76: dependabot: directory '/', update vitest
+- 54e0c84: dependabot: directory '/', update @types/node
+- 54e0c84: dependabot: directory '/', update type-fest
+- ab57ca9: dependabot: directory '/', update @types/node
+- ab57ca9: dependabot: directory '/', update eslint-config-prettier
+- 035414a: dependabot: directory '/', update @types/node
+- d0e240b: dependabot: directory '/', update eslint-config-prettier
+- 98f3ac5: dependabot: directory '/', update @changesets/cli
+- 98f3ac5: dependabot: directory '/', update typescript-eslint
+- 4fd69de: dependabot: directory '/', update @types/node
+
 ## 0.2.2
 
 ### Patch Changes
