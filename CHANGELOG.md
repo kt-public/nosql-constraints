@@ -1,5 +1,11 @@
 # @ktarmyshov/nosql-constraints
 
+## 0.3.1
+
+### Patch Changes
+
+- f27919b: move zod from devDeps to deps
+
 ## 0.3.0
 
 ### Minor Changes
