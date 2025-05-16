@@ -60,15 +60,15 @@
 		"rimraf": "^6.0.1",
 		"typescript": "^5.8.2",
 		"typescript-eslint": "^8.26.1",
-		"vitest": "^3.0.8",
-		"zod": "^3.24.2"
+		"vitest": "^3.0.8"
 	},
 	"dependencies": {
+		"@ktarmyshov/digraph-js": "^0.x",
+		"@ktarmyshov/typesafe-utilities": "^0.x",
 		"lodash": "^4.17.21",
 		"safe-stable-stringify": "^2.5.0",
 		"type-fest": "^4.40.0",
-		"@ktarmyshov/typesafe-utilities": "^0.x",
-		"@ktarmyshov/digraph-js": "^0.x"
+		"zod": "^3.24.4"
 	},
 	"engines": {
 		"node": ">=20.0.0"
