@@ -5,6 +5,7 @@
 [![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=kt-npm-modules_nosql-constraints&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=kt-npm-modules_nosql-constraints)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=kt-npm-modules_nosql-constraints&metric=coverage)](https://sonarcloud.io/summary/new_code?id=kt-npm-modules_nosql-constraints)
 [![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=kt-npm-modules_nosql-constraints&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=kt-npm-modules_nosql-constraints)
+[![Socket Badge](https://socket.dev/api/badge/npm/package/@ktarmyshov/nosql-constraints)](https://socket.dev/npm/package/@ktarmyshov/nosql-constraints/overview)
 
 # nosql-constraints
 
