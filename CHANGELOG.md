@@ -1,5 +1,12 @@
 # @ktarmyshov/nosql-constraints
 
+## 0.3.2
+
+### Patch Changes
+
+- c18d4d0: dependabot: directory '/', update @types/node
+- c18d4d0: dependabot: directory '/', update eslint
+
 ## 0.3.1
 
 ### Patch Changes
