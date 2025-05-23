@@ -19,7 +19,7 @@ export type Constraint<
 	TReferenced extends UnknownStringRecord
 > = {
 	cascadeDelete?: true;
-	refProperties: Partial<Record<PropertyPaths<TReferencing>, PropertyPaths<TReferenced>>>;
+	refProperties: Record<PropertyPaths<TReferencing>, PropertyPaths<TReferenced>>;
 };
 
 export type ConstraintPathElement<
